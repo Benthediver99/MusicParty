@@ -7,6 +7,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 import threading as thread
 from pygame import mixer
+import musicparty_server
 
 class MusicParty(tk.Tk):
     def __init__(self):
@@ -149,14 +150,17 @@ class PartyScreen(tk.Frame):
             mixer.music.unpause()
             self.paused = False
         else:
-            self.stop_music()
-            time.sleep(1)
-            #selected_song = playlistbox.curselection()
-            #selected_song = int(selected_song[0])
-            #song_to_play = self.controller.playlist[selected_song]\
-            song_to_play = self.controller.playlist[0]
-            mixer.music.load(song_to_play)
-            mixer.music.play()
+            try:
+                self.stop_music()
+                time.sleep(1)
+                #selected_song = playlistbox.curselection()
+                #selected_song = int(selected_song[0])
+                #song_to_play = self.controller.playlist[selected_song]\
+                song_to_play = self.controller.playlist[0]
+                mixer.music.load(song_to_play)
+                mixer.music.play()
+            except:
+                messagebox.showerror('Error playing song','No song given')
 
     def stop_music(self):
         mixer.music.stop()
