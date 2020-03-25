@@ -1,5 +1,6 @@
 import socket
 import os
+import time
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
@@ -148,26 +149,14 @@ class PartyScreen(tk.Frame):
             mixer.music.unpause()
             self.paused = False
         else:
-            try:
-                stop_music()
-                time.sleep(1)
-                selected_song = playlistbox.curselection()
-                selected_song = int(selected_song[0])
-                song_to_play = self.controller.playlist[selected_song]
-                mixer.music.load(song_to_play)
-                mixer.music.play()
-            except:
-                messagebox.showerror('Play error','No files given to play')
-
-    def que(self):
-        global x, c
-        pos = pygame.mixer.music.get_pos()
-        if int(pos) == -1:
-            x += 1
-            pygame.mixer.music.load(c[x])
-            pygame.mixer.music.play(0)
-
-        root.after(1, que)
+            self.stop_music()
+            time.sleep(1)
+            #selected_song = playlistbox.curselection()
+            #selected_song = int(selected_song[0])
+            #song_to_play = self.controller.playlist[selected_song]\
+            song_to_play = self.controller.playlist[0]
+            mixer.music.load(song_to_play)
+            mixer.music.play()
 
     def stop_music(self):
         mixer.music.stop()
