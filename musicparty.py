@@ -113,7 +113,7 @@ class PartyScreen(tk.Frame):
         mixer.init()
 
         play_button = ttk.Button(self, text="Play",
-                                 command=lambda: self.play_music('Phantom Sage - Crystal Clouds.mp3'))
+                                 command=lambda: self.play_music('Ember Island - Leaving (Severo Remix).mp3'))
         play_button.place(relx=0.5, rely=0.4, anchor=tk.CENTER)
 
         browse_button = ttk.Button(self, text="Browse", command=lambda: self.browse_file())
@@ -126,6 +126,16 @@ class PartyScreen(tk.Frame):
     def play_music(self, filename):
         mixer.music.load(filename)
         mixer.music.play()
+
+    def que():
+        global x, c
+        pos = pygame.mixer.music.get_pos()
+        if int(pos) == -1:
+            x += 1
+            pygame.mixer.music.load(c[x])
+            pygame.mixer.music.play(0)
+
+        root.after(1, que)
 
     def stop_music(self):
         mixer.music.stop()
