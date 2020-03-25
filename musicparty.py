@@ -18,6 +18,8 @@ class MusicParty(tk.Tk):
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
+        self.playlist = []
+
         self.frame_list = [MainMenu, JoinParty, HostParty, Help, PartyScreen]
         self.frames = {}
 
@@ -110,6 +112,7 @@ class Help(tk.Frame):
 class PartyScreen(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+        self.controller = controller  # allows for connection and more interaction with other classes
         mixer.init()
 
         self.play_button = ttk.Button(self, text="Play",
@@ -150,7 +153,7 @@ class PartyScreen(tk.Frame):
                 time.sleep(1)
                 selected_song = playlistbox.curselection()
                 selected_song = int(selected_song[0])
-                song_to_play = playlist[selected_song]
+                song_to_play = self.controller.playlist[selected_song]
                 mixer.music.load(song_to_play)
                 mixer.music.play()
             except:
@@ -172,8 +175,8 @@ class PartyScreen(tk.Frame):
     def add_to_playlist(self, filename):
         filename = os.path.basename(filename)
         index = 0
-        playlistbox.insert(index, filename)
-        playlist.insert(index, filename_path)
+        #playlistbox.insert(index, filename)
+        self.controller.playlist.insert(index, filename_path)
         index += 1
 
     def pause_music(self):
