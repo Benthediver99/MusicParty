@@ -74,8 +74,29 @@ class JoinParty(tk.Frame):
 class HostParty(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+        host_name, controller.connect_ip, controller.connect_port = controller.musicparty_server.getHostInfo()
+        title = tk.Label(self,
+                         text='Host Setup')
+        title.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
+
         host_button = ttk.Button(self, text="Host Party", command=lambda: controller.showFrame(PartyScreen))
         host_button.place(relx=0.5, rely=0.8, anchor=tk.CENTER)
+
+        help_text = tk.Text(self, bd=1, bg='white smoke', fg='black',
+                            height=7, width=40,
+                            wrap=tk.WORD, padx=5, pady=5)
+        help_text.insert(tk.INSERT, 'To host a party please give out the ip and port listed below to other '
+                                    'players. Click \'Host Party\' when all users connected\n\n'
+                                    'Computer Name : {}\n'
+                                    'IP Address    : {}\n'
+                                    'Port          : {}'.format(host_name, controller.connect_ip,
+                                                                controller.connect_port))
+
+        return_button = ttk.Button(self,
+                                   text='Main Menu',
+                                   command=lambda: controller.showFrame(MainMenu))
+        return_button.place(relx=0.50, rely=0.9, anchor=tk.CENTER)
+
 
 
 class Help(tk.Frame):
