@@ -122,6 +122,12 @@ class PartyScreen(tk.Frame):
         stop_button = ttk.Button(self, text="Stop", command=lambda: self.stop_music())
         stop_button.place(relx=0.5, rely=0.8, anchor=tk.CENTER)
 
+        scale = ttk.Scale(self, from_=0, to=100,command= self.set_vol)
+
+        scale.set(70)  # implement the default value of scale when music player starts
+        mixer.music.set_volume(0.7)
+        scale.place(relx=0.5, rely=0.9, anchor=tk.CENTER)
+
     # functions
     def play_music(self, filename):
         mixer.music.load(filename)
@@ -164,7 +170,7 @@ class PartyScreen(tk.Frame):
         play_music()
         statusbar['text'] = "Music Rewinded"
 
-    def set_vol(val):
+    def set_vol(self, val):
         volume = float(val) / 100
         mixer.music.set_volume(volume)
         # set_volume of mixer takes value only from 0 to 1. Example - 0, 0.1,0.55,0.54.0.99,1
