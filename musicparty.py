@@ -1,11 +1,11 @@
 import socket
-import sys
+import os
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
+from tkinter import messagebox
 import threading as thread
 from pygame import mixer
-
 
 class MusicParty(tk.Tk):
     def __init__(self):
@@ -112,28 +112,51 @@ class PartyScreen(tk.Frame):
         tk.Frame.__init__(self, parent)
         mixer.init()
 
-        play_button = ttk.Button(self, text="Play",
+        self.play_button = ttk.Button(self, text="Play",
                                  command=lambda: self.play_music('Ember Island - Leaving (Severo Remix).mp3'))
-        play_button.place(relx=0.5, rely=0.4, anchor=tk.CENTER)
+        self.play_button.place(relx=0.5, rely=0.4, anchor=tk.CENTER)
 
-        browse_button = ttk.Button(self, text="Browse", command=lambda: self.browse_file())
-        browse_button.place(relx=0.5, rely=0.6, anchor=tk.CENTER)
+        self.browse_button = ttk.Button(self, text="Browse your files", command=lambda: self.browse_file())
+        self.browse_button.place(relx=0.5, rely=0.6, anchor=tk.CENTER)
 
-        stop_button = ttk.Button(self, text="Stop", command=lambda: self.stop_music())
-        stop_button.place(relx=0.5, rely=0.8, anchor=tk.CENTER)
+        self.stop_button = ttk.Button(self, text="Stop", command=lambda: self.stop_music())
+        self.stop_button.place(relx=0.5, rely=0.8, anchor=tk.CENTER)
 
-        scale = ttk.Scale(self, from_=0, to=100,command= self.set_vol)
+        self.pause_button = ttk.Button(self, text="Pause", command=lambda: self.pause_music())
+        self.pause_button.place(relx=0.5, rely=0.2, anchor=tk.CENTER)
 
-        scale.set(70)  # implement the default value of scale when music player starts
+        self.scale = ttk.Scale(self, from_=0, to=100,command= self.set_vol)
+        self.scale.set(70)  # implement the default value of scale when music player starts
         mixer.music.set_volume(0.7)
-        scale.place(relx=0.5, rely=0.9, anchor=tk.CENTER)
+        self.scale.place(relx=0.5, rely=0.9, anchor=tk.CENTER)
+
+        self.paused = False
 
     # functions
-    def play_music(self, filename):
-        mixer.music.load(filename)
-        mixer.music.play()
+    def browse_file(self):
+        global filename_path
+        filename_path = filedialog.askopenfilename()
+        self.add_to_playlist(filename_path)
 
-    def que():
+        mixer.music.queue(filename_path)
+
+    def play_music(self, filename):
+        if self.paused:
+            mixer.music.unpause()
+            self.paused = False
+        else:
+            try:
+                stop_music()
+                time.sleep(1)
+                selected_song = playlistbox.curselection()
+                selected_song = int(selected_song[0])
+                song_to_play = playlist[selected_song]
+                mixer.music.load(song_to_play)
+                mixer.music.play()
+            except:
+                messagebox.showerror('Play error','No files given to play')
+
+    def que(self):
         global x, c
         pos = pygame.mixer.music.get_pos()
         if int(pos) == -1:
@@ -146,47 +169,24 @@ class PartyScreen(tk.Frame):
     def stop_music(self):
         mixer.music.stop()
 
-    def browse_file(self):
-        global filename_path
-        filename_path = filedialog.askopenfilename()
-        add_to_playlist(filename_path)
-
-        mixer.music.queue(filename_path)
-
-    def add_to_playlist(filename):
+    def add_to_playlist(self, filename):
         filename = os.path.basename(filename)
         index = 0
         playlistbox.insert(index, filename)
         playlist.insert(index, filename_path)
         index += 1
 
-    def pause_music():
-        global paused
-        paused = TRUE
+    def pause_music(self):
+        self.paused = TRUE
         mixer.music.pause()
-        statusbar['text'] = "Music Paused"
 
-    def rewind_music():
+    def rewind_music(self):
         play_music()
-        statusbar['text'] = "Music Rewinded"
 
     def set_vol(self, val):
         volume = float(val) / 100
         mixer.music.set_volume(volume)
         # set_volume of mixer takes value only from 0 to 1. Example - 0, 0.1,0.55,0.54.0.99,1
-
-    def mute_music():
-        global muted
-        if muted:  # Unmute the music
-            mixer.music.set_volume(0.7)
-            volumeBtn.configure(image=volumePhoto)
-            scale.set(70)
-            muted = FALSE
-        else:  # mute the music
-            mixer.music.set_volume(0)
-            volumeBtn.configure(image=mutePhoto)
-            scale.set(0)
-            muted = TRUE
 
 
 if __name__ == '__main__':
