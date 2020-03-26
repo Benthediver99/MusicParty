@@ -196,7 +196,12 @@ class PartyScreen(tk.Frame):
                 mixer.music.load(song_to_play)
                 mixer.music.play()
             except:
-                messagebox.showerror('Error playing song','No song given')
+                try:
+                    song_to_play = self.controller.playlist[0]
+                    mixer.music.load(song_to_play)
+                    mixer.music.play()
+                except:
+                    messagebox.showerror('Error playing song', 'No song given or not .mp3 file')
 
     def stop_music(self):
         mixer.music.stop()
