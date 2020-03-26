@@ -7,12 +7,12 @@ from tkinter import filedialog
 from tkinter import messagebox
 import threading as thread
 from pygame import mixer
-import musicparty_server
+#import musicparty_server
 
 class MusicParty(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
-        self.title('MusicParty ')
+        self.title('MusicParty')
         self.resizable(False, False)
 
         container = tk.Frame(self)
@@ -32,14 +32,10 @@ class MusicParty(tk.Tk):
 
         self.showFrame(MainMenu)
 
-        statusbar = ttk.Label(self, text="Welcome to MusicParty", font='Times 10 italic')
-        statusbar.pack(side=tk.BOTTOM)
-
     def showFrame(self, requested_frame):
         """Takes in a frame class and raises it to the front of the GUI"""
         frame = self.frames[requested_frame]
         frame.tkraise()
-
 
 class MainMenu(tk.Frame):
     def __init__(self, parent, controller):
@@ -67,14 +63,27 @@ class MainMenu(tk.Frame):
 class JoinParty(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+        self.controller = controller
         join_button = ttk.Button(self, text="Join Party", command=lambda: controller.showFrame(PartyScreen))
-        join_button.place(relx=0.5, rely=0.8, anchor=tk.CENTER)
+        join_button.place(relx=0.5, rely=0.75, anchor=tk.CENTER)
 
+        help_text = tk.Text(self, bd=1, bg='white smoke', fg='black',
+                            height=2, width=40,
+                            wrap=tk.WORD, padx=5, pady=5)
+        help_text.tag_configure('center', justify='center')
+        help_text.tag_add('center', 1.0, 'end')
+        help_text.insert(tk.INSERT, 'To join a game please enter the IP address of the host in the space below')
+        help_text.place(relx=0.5, rely=0.35, anchor=tk.CENTER)
+
+        return_button = ttk.Button(self,
+                                   text='Main Menu',
+                                   command=lambda: controller.showFrame(MainMenu))
+        return_button.place(relx=0.50, rely=0.9, anchor=tk.CENTER)
 
 class HostParty(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        host_name, controller.connect_ip, controller.connect_port = controller.musicparty_server.getHostInfo()
+        #host_name, controller.connect_ip, controller.connect_port = controller.musicparty_server.getHostInfo()
         title = tk.Label(self,
                          text='Host Setup')
         title.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
@@ -89,8 +98,8 @@ class HostParty(tk.Frame):
                                     'players. Click \'Host Party\' when all users connected\n\n'
                                     'Computer Name : {}\n'
                                     'IP Address    : {}\n'
-                                    'Port          : {}'.format(host_name, controller.connect_ip,
-                                                                controller.connect_port))
+                                    'Port          : {}')#.format(host_name, controller.connect_ip,
+                                                                #controller.connect_port))
 
         return_button = ttk.Button(self,
                                    text='Main Menu',
@@ -108,18 +117,16 @@ class Help(tk.Frame):
                     '                                                     How To Use \'MusicParty\'                         \n'
                     '_______________________________________________________________________                                \n'
                     '                                                                HOST                                   \n'
-                    '1. Press "Host Game" on the Main Menu                                             \n'
+                    '1. Press "Host Party" on the Main Menu                                             \n'
                     '2. Give the displayed IP and port number                                          \n'
                     '3. When all players have connected hit start, and type                            \n'
                     '------------------------------------------------------------------------------------------------------\n'
                     '                                                               PLAYER                                 \n'
-                    '1. Press "Join Game" on the Main Menu                                             \n'
+                    '1. Press "Join Party" on the Main Menu                                             \n'
                     '2. Get the IP number and port number from the Host                                \n'
                     '      -type it in in format [IP #]:[port #]                                       \n'
                     '3. Once the host starts the game, a sentence will popup with the text box below it\n'
                     '4. Once done typing, HIT ENTER                                                    \n'
-                    '5. Once all players are finished, score is determined by accuracy and time to     \n'
-                    '   answer.  Winner is then displayed along with all of your stats                 \n'
                     '                                                                                  \n'
                     '_______________________________________________________________________\n'
                     )
