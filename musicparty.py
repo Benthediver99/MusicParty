@@ -147,24 +147,33 @@ class PartyScreen(tk.Frame):
 
         self.play_button = ttk.Button(self, text="Play",
                                  command=lambda: self.play_music('Ember Island - Leaving (Severo Remix).mp3'))
-        self.play_button.place(relx=0.5, rely=0.4, anchor=tk.CENTER)
+        self.play_button.place(relx=0.6, rely=0.4, anchor=tk.CENTER)
 
         self.browse_button = ttk.Button(self, text="Browse your files", command=lambda: self.browse_file())
-        self.browse_button.place(relx=0.5, rely=0.6, anchor=tk.CENTER)
+        self.browse_button.place(relx=0.6, rely=0.6, anchor=tk.CENTER)
 
         self.stop_button = ttk.Button(self, text="Stop", command=lambda: self.stop_music())
-        self.stop_button.place(relx=0.5, rely=0.8, anchor=tk.CENTER)
+        self.stop_button.place(relx=0.6, rely=0.8, anchor=tk.CENTER)
 
         self.pause_button = ttk.Button(self, text="Pause", command=lambda: self.pause_music())
-        self.pause_button.place(relx=0.5, rely=0.2, anchor=tk.CENTER)
+        self.pause_button.place(relx=0.6, rely=0.2, anchor=tk.CENTER)
 
         self.scale = ttk.Scale(self, from_=0, to=100,command= self.set_vol)
         self.scale.set(70)  # implement the default value of scale when music player starts
         mixer.music.set_volume(0.7)
-        self.scale.place(relx=0.5, rely=0.9, anchor=tk.CENTER)
+        self.scale.place(relx=0.6, rely=0.9, anchor=tk.CENTER)
 
         self.paused = False
 
+        self.playlist_frame = ttk.LabelFrame(self, text="Song Playlist")
+        self.playlist_frame.place(x=30, y=30, width=300, height=300)
+        self.playlist_scroll = ttk.Scrollbar(self.playlist_frame, orient=tk.VERTICAL)
+        self.playlist_list = tk.Listbox(self.playlist_frame, yscrollcommand=self.playlist_scroll.set,
+                                     selectmode=tk.SINGLE, relief=tk.GROOVE)
+        self.playlist_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        self.playlist_scroll.config(command=self.playlist_list.yview())
+        self.playlist_list.pack(fill=tk.BOTH)
+        self.playlist_list.config(width=300, height=300)
     # functions
     def browse_file(self):
         global filename_path
@@ -181,10 +190,9 @@ class PartyScreen(tk.Frame):
             try:
                 self.stop_music()
                 time.sleep(1)
-                #selected_song = playlistbox.curselection()
-                #selected_song = int(selected_song[0])
-                #song_to_play = self.controller.playlist[selected_song]\
-                song_to_play = self.controller.playlist[0]
+                selected_song = self.playlist_list.curselection()
+                selected_song = int(selected_song[0])
+                song_to_play = self.controller.playlist[selected_song]
                 mixer.music.load(song_to_play)
                 mixer.music.play()
             except:
@@ -196,7 +204,7 @@ class PartyScreen(tk.Frame):
     def add_to_playlist(self, filename):
         filename = os.path.basename(filename)
         index = 0
-        #playlistbox.insert(index, filename)
+        self.playlist_list.insert(index, filename)
         self.controller.playlist.insert(index, filename_path)
         index += 1
 

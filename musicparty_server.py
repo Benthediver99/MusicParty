@@ -5,7 +5,7 @@ import os
 #Website with TCP instruction: https://www.thepythoncode.com/article/send-receive-files-using-sockets-python
 
 SEPARATOR = "<SEPARATOR>"
-BUFFER_SIZE = 1024 # send 4096 bytes each time step
+BUFFER_SIZE = 1024
 clients = {}
 addresses = {}
 HOST = ''
