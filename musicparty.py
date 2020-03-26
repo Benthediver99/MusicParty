@@ -7,7 +7,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 import threading as thread
 from pygame import mixer
-#import musicparty_server
+
 
 class MusicParty(tk.Tk):
     def __init__(self):
@@ -175,9 +175,10 @@ class PartyScreen(tk.Frame):
         self.playlist_list.pack(fill=tk.BOTH)
         self.playlist_list.config(width=300, height=300)
     # functions
+
     def browse_file(self):
         global filename_path
-        filename_path = filedialog.askopenfilename()
+        filename_path = filedialog.askopenfilename(filetypes=[('MP3', '*.mp3')])
         self.add_to_playlist(filename_path)
 
         mixer.music.queue(filename_path)
@@ -214,11 +215,11 @@ class PartyScreen(tk.Frame):
         index += 1
 
     def pause_music(self):
-        self.paused = TRUE
+        self.paused = True
         mixer.music.pause()
 
     def rewind_music(self):
-        play_music()
+        self.play_music()
 
     def set_vol(self, val):
         volume = float(val) / 100

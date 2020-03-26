@@ -1,4 +1,4 @@
-#!C:\Users\benja\PycharmProjects\MusicParty\venv\Scripts\python.exe
+#!"C:\Users\Braxton Laster\Documents\02 - Schoolwork\CSCI 420 - Networking\MusicParty\venv\Scripts\python.exe"
 # EASY-INSTALL-ENTRY-SCRIPT: 'pip==19.0.3','console_scripts','pip'
 __requires__ = 'pip==19.0.3'
 import re
