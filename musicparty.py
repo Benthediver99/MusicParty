@@ -224,6 +224,7 @@ class PartyScreen(tk.Frame):
         self.playlist_list.insert(index, filename)
         self.controller.playlist.insert(index, filename_path)
         index += 1
+        self.current_song = index
 
     def pause_music(self):
         if self.paused == True:
