@@ -1,6 +1,7 @@
 import socket
 import os
 import time
+import sys
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
@@ -10,21 +11,29 @@ import pygame
 from pygame import mixer
 from mutagen.mp3 import MP3
 import random
+import client_server
+
 
 class MusicParty(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
         self.title('MusicParty')
         self.resizable(False, False)
+        self.protocol('WM_DELETE_WINDOW', self.onClosing)
+
+        self.room_server = None
+        self.join_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.join_ip = None
+        self.tracker_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        self.playlist = []
 
         container = tk.Frame(self)
         container.pack(side='top', fill='both', expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
-        self.playlist = []
-
-        self.frame_list = [MainMenu, JoinParty, HostParty, Help, PartyScreen]
+        self.frame_list = [MainMenu, Help, PartyScreen]
         self.frames = {}
 
         for frame in self.frame_list:
@@ -39,6 +48,38 @@ class MusicParty(tk.Tk):
         frame = self.frames[requested_frame]
         frame.tkraise()
 
+    def hostStartup(self):
+        self.room_server = client_server.Server()
+        self.room_server.start()
+        self.showFrame(PartyScreen)
+
+    def joinRoom(self):
+        popup = tk.Toplevel()
+        popup.title('Join a Room')
+
+        label = tk.Label(popup, text='Enter room code to join')
+        label.place(relx=0.5, rely=0.45, anchor=tk.CENTER)
+
+        join_addr = ttk.Entry(popup)
+        join_addr.place(relx=0.5, rely=0.65, anchor=tk.CENTER)
+
+        connect_button = ttk.Button(popup, text='Connect', command=lambda: self.findRoomIP(popup, join_addr))
+        connect_button.place(relx=0.5, rely=0.8, anchor=tk.CENTER)
+
+    def findRoomIP(self, popup, join_key):
+        self.tracker_server.sendto(client_server.TRACKER_ADDR, join_key)
+
+        popup.destroy()
+
+    # Deals with making sure everything closes properly when closing the window
+    def onClosing(self):
+        try:
+            self.destroy()
+            self.server.shutdown()
+        except:
+            sys.exit(0)
+
+
 class MainMenu(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -49,12 +90,12 @@ class MainMenu(tk.Frame):
         label.pack(pady=10, padx=10)
 
         # Join Game button - brings JoinGame frame to the front
-        join_button = ttk.Button(self, text="Join Party", command=lambda: controller.showFrame(JoinParty))
+        join_button = ttk.Button(self, text="Join Party", command=lambda: controller.joinRoom())
         join_button.place(height=40, width=300, relx=0.50, rely=0.35, anchor=tk.CENTER)
 
         # Host Game button - brings HostGame frame to the front
         host_button = ttk.Button(self, text="Host Party",
-                                 command=lambda: controller.showFrame(HostParty))
+                                 command=lambda: controller.hostStartup())
         host_button.place(height=40, width=300, relx=0.50, rely=0.50, anchor=tk.CENTER)
 
         # Help page button - brings Help frame to the front
@@ -62,7 +103,7 @@ class MainMenu(tk.Frame):
         help_button.place(height=40, width=300, relx=0.50, rely=0.65, anchor=tk.CENTER)
 
 
-class JoinParty(tk.Frame):
+'''class JoinParty(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
@@ -106,8 +147,7 @@ class HostParty(tk.Frame):
         return_button = ttk.Button(self,
                                    text='Main Menu',
                                    command=lambda: controller.showFrame(MainMenu))
-        return_button.place(relx=0.50, rely=0.9, anchor=tk.CENTER)
-
+        return_button.place(relx=0.50, rely=0.9, anchor=tk.CENTER)'''
 
 
 class Help(tk.Frame):
@@ -309,6 +349,7 @@ class PartyScreen(tk.Frame):
         self.time_elapsed.configure(text=clock)
         self.after(100, self.get_time_elapsed)
 
+
     def show_details(self, play_song):
         file_data = os.path.splitext(play_song)
 
@@ -327,6 +368,7 @@ class PartyScreen(tk.Frame):
         secs = round(secs)
         timeformat = '{:d}:{:02d}:{:02d}'.format(hours, mins, secs)
         self.lengthlabel['text'] = timeformat
+
 
 if __name__ == '__main__':
     app = MusicParty()
