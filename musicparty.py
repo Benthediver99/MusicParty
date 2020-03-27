@@ -326,26 +326,27 @@ class PartyScreen(tk.Frame):
         h, m = divmod(m, 60)
         clock = "%d:%02d:%02d" % (h, m, s)          # sets clock string variable based on inputted h,m,s variables
         self.time_elapsed.configure(text=clock)
-        self.after(100, self.get_time_elapsed)
+        self.after(100, self.get_time_elapsed)      # sets clock display every second
 
+    #
     def show_details(self, play_song):
         file_data = os.path.splitext(play_song)
 
-        if file_data[1] == '.mp3':
-            audio = MP3(play_song)
-            total_length = audio.info.length
+        if file_data[1] == '.mp3':              # if input is mp3 file get the total
+            audio = MP3(play_song)              # length of it from metadata using
+            total_length = audio.info.length    # mutagen.mp3 module
         else:
             a = mixer.Sound(play_song)
             total_length = a.get_length()
 
         # div - total_length/60, mod - total_length % 60
-        mins, secs = divmod(total_length, 60)
+        mins, secs = divmod(total_length, 60) # divides seconds into sec,min,hour variables
         hours, mins = divmod(mins, 60)
         hours = round(hours)
         mins = round(mins)
         secs = round(secs)
-        timeformat = '{:d}:{:02d}:{:02d}'.format(hours, mins, secs)
-        self.lengthlabel['text'] = timeformat
+        timeformat = '{:d}:{:02d}:{:02d}'.format(hours, mins, secs)  # sets timeformat string variable based on input
+        self.lengthlabel['text'] = timeformat  # updates total length time display
 
 
 if __name__ == '__main__':
