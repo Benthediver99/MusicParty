@@ -11,7 +11,6 @@ import threading
 import pygame
 from pygame import mixer
 from mutagen.mp3 import MP3
-import random
 import client_server
 
 
@@ -156,8 +155,10 @@ class PartyScreen(tk.Frame):
         mixer.music.set_endevent(self.MUSIC_ENDED)
 
         self.current_song = 0
-        self.stopped = True
+        self.stopped = False
         self.paused = False
+        self.playing = False
+        self.current_song_playing = 'None'
 
         # button to play selected music - runs play_music()
         self.play_button = ttk.Button(self, text="Play",
@@ -253,37 +254,45 @@ class PartyScreen(tk.Frame):
                     mixer.music.load(song_to_play)
                     mixer.music.play()
                 except:
-                    messagebox.showerror('Error playing song', 'No song given or not .mp3 file') # pop-up box with error
+                    messagebox.showerror('Error playing song',
+                                         'No song given or not .mp3 file')  # pop-up box with error
         try:
             # self.update_timeslider()
             self.current_song = selected_song
             self.show_details(song_to_play)  # updates total song length on time display and other stuff
-            self.statusbar['text'] = "Playing music" + ' - ' + os.path.basename(song_to_play)  # updates status bar
+            self.statusbar['text'] = "Playing music - " + os.path.basename(song_to_play)  # updates status bar
+            self.stopped = False  # needed because complicated logic - self.stop music in first try block
+            self.playing = True
+            self.current_song_playing = song_to_play
+
         except:
             pass  # for the scenario where the play button is pressed with no songs in list
 
     # ran by check_music_thread when song ends
     def play_next_song(self):
-        if len(self.controller.playlist) == 1:          # 1. if only one song in list
+        if len(self.controller.playlist) == 1:  # 1. if only one song in list
             song_to_play = self.controller.playlist[0]  # then replay that song
         elif self.controller.playlist.index(self.current_song) < len(self.controller.playlist):  # 2. if not last song
             song_to_play = self.controller.playlist[self.controller.playlist.index(self.current_song + 1)]
         else:
             song_to_play = self.controller.playlist[0]  # 3. if last song in playlist then go back to first song
-        mixer.music.load(song_to_play)                  # load what was assigned to song_to_play in one of
-        mixer.music.play()                              # the 3 scenarios above
+        mixer.music.load(song_to_play)  # load what was assigned to song_to_play in one of
+        mixer.music.play()  # the 3 scenarios above
         self.current_song = song_to_play  # assign song_to_play to current_song global variable
 
     # adds filename to the playlist by adding the file path
     def add_to_playlist(self, filename):
         filename = os.path.basename(filename)
         index = 0  # beginning of playlist
-        self.playlist_list.insert(index, filename)              # appends to the playlist_list widget
-        self.controller.playlist.insert(index, filename_path)   # appends to actual playlist list variable
+        self.playlist_list.insert(index, filename)  # appends to the playlist_list widget
+        self.controller.playlist.insert(index, filename_path)  # appends to actual playlist list variable
         # self.index+=
         self.current_song = filename_path  # assign filename_path of selected song to current_song global variable
-        self.get_time_elapsed()            # update the total_length timer display
+        self.get_time_elapsed()  # update the total_length timer display
         # self.update_timeslider()
+        self.statusbar['text'] = "Added to playlist - " + os.path.basename(filename_path)  # updates status bar when song is added
+        self.add_to_playlist_status_thread = threading.Thread(target=self.add_to_playlist_status, args= [self.current_song_playing])
+        self.add_to_playlist_status_thread.start()
 
     '''
     def pause_music(self):
@@ -321,26 +330,61 @@ class PartyScreen(tk.Frame):
 
     # takes time that has passed from song that is playing - uses pygame.mixer
     def get_time_elapsed(self):
-        time = int(mixer.music.get_pos() / 1000)    # divides seconds into sec,min,hour variables
+        time = int(mixer.music.get_pos() / 1000)  # divides seconds into sec,min,hour variables
         m, s = divmod(time, 60)
         h, m = divmod(m, 60)
-        clock = "%d:%02d:%02d" % (h, m, s)          # sets clock string variable based on inputted h,m,s variables
+        clock = "%d:%02d:%02d" % (h, m, s)  # sets clock string variable based on inputted h,m,s variables
         self.time_elapsed.configure(text=clock)
-        self.after(100, self.get_time_elapsed)      # sets clock display every second
+        self.after(100, self.get_time_elapsed)  # sets clock display every second
 
+    def add_to_playlist_status(self, current_song_playing):
+        if self.stopped:
+            time.sleep(2.5)
+            self.song_selected_status(self.current_song)
+        else:
+            try:
+                time.sleep(2.5)
+                self.song_selected_status(current_song_playing)
+            except:
+                time.sleep(2.5)
+                self.song_selected_status(self.current_song)
+
+    #
+    def song_selected_status(self, songname):
+        if self.playing:
+            self.song_selected_thread = threading.Thread(target=self.timeout_song_selected_status,
+                                                                  args=[self.current_song])
+            self.song_selected_thread.start()
+        else:
+            self.statusbar['text'] = "Song selected" + ' : ' + os.path.basename(songname)  # updates status bar
+
+    #
+    def timeout_song_selected_status(self, songname):
+        try:
+            selected_song = self.playlist_list.curselection()  # gets tuple from playlist list tkinter widget
+            selected_song = int(selected_song[0])  # takes first value of tuple (song filepath)
+            selected_song = self.controller.playlist[selected_song]
+            self.statusbar['text'] = "Song selected" + ' : ' + os.path.basename(selected_song)  # updates status bar
+            time.sleep(5)
+            self.statusbar['text'] = "Playing music - " + os.path.basename(
+                self.current_song_playing)  # updates status bar
+        except:
+            self.statusbar['text'] = "Song selected" + ' : ' + os.path.basename(songname)  # updates status bar
+            time.sleep(5)
+            self.statusbar['text'] = "Playing music - " + os.path.basename(self.current_song_playing)  # updates status bar
     #
     def show_details(self, play_song):
         file_data = os.path.splitext(play_song)
 
-        if file_data[1] == '.mp3':              # if input is mp3 file get the total
-            audio = MP3(play_song)              # length of it from metadata using
-            total_length = audio.info.length    # mutagen.mp3 module
+        if file_data[1] == '.mp3':  # if input is mp3 file get the total
+            audio = MP3(play_song)  # length of it from metadata using
+            total_length = audio.info.length  # mutagen.mp3 module
         else:
             a = mixer.Sound(play_song)
             total_length = a.get_length()
 
         # div - total_length/60, mod - total_length % 60
-        mins, secs = divmod(total_length, 60) # divides seconds into sec,min,hour variables
+        mins, secs = divmod(total_length, 60)  # divides seconds into sec,min,hour variables
         hours, mins = divmod(mins, 60)
         hours = round(hours)
         mins = round(mins)
