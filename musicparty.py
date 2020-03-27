@@ -227,6 +227,7 @@ class PartyScreen(tk.Frame):
         index += 1
         self.current_song = index
         self.get_time_elapsed()
+        self.update_timeslider()
 
     def pause_music(self):
         if self.paused == True:
