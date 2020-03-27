@@ -109,7 +109,8 @@ class MainMenu(tk.Frame):
         help_button = ttk.Button(self, text="Help", command=lambda: controller.showFrame(Help))
         help_button.place(height=40, width=300, relx=0.50, rely=0.65, anchor=tk.CENTER)
 
-
+        music_player = ttk.Button(self, text="Music Player", command=lambda: controller.showFrame(PartyScreen))
+        music_player.place(height=40, width=300, relx=0.50, rely=0.80, anchor=tk.CENTER)
 class Help(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -152,8 +153,8 @@ class PartyScreen(tk.Frame):
         mixer.music.set_endevent(self.MUSIC_ENDED)
 
         self.current_song = 0
+        self.stopped = True
         self.paused = False
-        self.next_song = False
 
         self.play_button = ttk.Button(self, text="Play",
                                       command=lambda: self.play_music())
@@ -196,11 +197,12 @@ class PartyScreen(tk.Frame):
         self.after_id = None
         '''
 
-        self.check_music_thread = threading.Thread(target=self.run_playlist_auto)
+        self.run_playlist_thread = threading.Thread(target=self.run_playlist_auto)
+        self.run_playlist_thread.start()
 
     # functions
     def run_playlist_auto(self):
-        while True:
+        while not self.stopped:
             for event in pygame.event.get():
                 if event.type == self.MUSIC_ENDED:
                     self.play_next_song()
@@ -214,6 +216,9 @@ class PartyScreen(tk.Frame):
 
     def play_music(self):
         self.get_time_elapsed()
+        if self.stopped:
+            mixer.music.unpause()
+            self.stopped = False
         if self.paused:
             mixer.music.unpause()
             self.paused = False
@@ -241,9 +246,9 @@ class PartyScreen(tk.Frame):
 
     def play_next_song(self):
         if len(self.controller.playlist) == 1:
-            song_to_play = self.controller.playlist[self.current_song]
+            song_to_play = self.controller.playlist[0]
         elif self.controller.playlist.index(self.current_song) < len(self.controller.playlist):
-            song_to_play = self.controller.playlist[self.current_song + 1]
+            song_to_play = self.controller.playlist[self.controller.playlist.index(self.current_song + 1)]
         else:
             song_to_play = self.controller.playlist[0]
         mixer.music.load(song_to_play)
@@ -255,8 +260,8 @@ class PartyScreen(tk.Frame):
         index = 0
         self.playlist_list.insert(index, filename)
         self.controller.playlist.insert(index, filename_path)
-        index += 1
-        self.current_song = index
+        #self.index+=
+        self.current_song = filename_path
         self.get_time_elapsed()
         #self.update_timeslider()
     '''
@@ -275,6 +280,7 @@ class PartyScreen(tk.Frame):
 
     def stop_music(self):
         mixer.music.stop()
+        self.stopped = True
         self.statusbar['text'] = "Music Stopped"
 
     def getsonglen(self):
