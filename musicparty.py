@@ -103,53 +103,6 @@ class MainMenu(tk.Frame):
         help_button.place(height=40, width=300, relx=0.50, rely=0.65, anchor=tk.CENTER)
 
 
-'''class JoinParty(tk.Frame):
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        self.controller = controller
-        join_button = ttk.Button(self, text="Join Party", command=lambda: controller.showFrame(PartyScreen))
-        join_button.place(relx=0.5, rely=0.75, anchor=tk.CENTER)
-
-        help_text = tk.Text(self, bd=1, bg='white smoke', fg='black',
-                            height=2, width=40,
-                            wrap=tk.WORD, padx=5, pady=5)
-        help_text.tag_configure('center', justify='center')
-        help_text.tag_add('center', 1.0, 'end')
-        help_text.insert(tk.INSERT, 'To join a game please enter the IP address of the host in the space below')
-        help_text.place(relx=0.5, rely=0.35, anchor=tk.CENTER)
-
-        return_button = ttk.Button(self,
-                                   text='Main Menu',
-                                   command=lambda: controller.showFrame(MainMenu))
-        return_button.place(relx=0.50, rely=0.9, anchor=tk.CENTER)
-
-class HostParty(tk.Frame):
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        #host_name, controller.connect_ip, controller.connect_port = controller.musicparty_server.getHostInfo()
-        title = tk.Label(self,
-                         text='Host Setup')
-        title.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
-
-        host_button = ttk.Button(self, text="Host Party", command=lambda: controller.showFrame(PartyScreen))
-        host_button.place(relx=0.5, rely=0.8, anchor=tk.CENTER)
-
-        help_text = tk.Text(self, bd=1, bg='white smoke', fg='black',
-                            height=7, width=40,
-                            wrap=tk.WORD, padx=5, pady=5)
-        help_text.insert(tk.INSERT, 'To host a party please give out the ip and port listed below to other '
-                                    'players. Click \'Host Party\' when all users connected\n\n'
-                                    'Computer Name : {}\n'
-                                    'IP Address    : {}\n'
-                                    'Port          : {}')#.format(host_name, controller.connect_ip,
-                                                                #controller.connect_port))
-
-        return_button = ttk.Button(self,
-                                   text='Main Menu',
-                                   command=lambda: controller.showFrame(MainMenu))
-        return_button.place(relx=0.50, rely=0.9, anchor=tk.CENTER)'''
-
-
 class Help(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -317,21 +270,6 @@ class PartyScreen(tk.Frame):
         mixer.music.stop()
         self.statusbar['text'] = "Music Stopped"
 
-    '''
-    def song_scrubber(self, val):
-        time = float(val)/1000
-        mixer.music.set_pos(time)
-    '''
-    '''
-    def update_timeslider(self, _=None):
-        if self.after_id is not None:
-            self.after_cancel(self.after_id)
-            self.after_id = None
-
-        time = (mixer.music.get_pos() / 1000)
-        self.timeslider.set(time)
-        self.after_id = self.after(1000, self.update_timeslider)
-    '''
     def getsonglen(self):
         s = mixer.Sound(self.controller.playlist[self.current_song])
         songlength = s.get_length()
@@ -374,5 +312,4 @@ if __name__ == '__main__':
     app = MusicParty()
     app.geometry('720x360')
     pygame.init()
-    # app.iconbitmap()
     app.mainloop()
