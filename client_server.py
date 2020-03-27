@@ -25,6 +25,7 @@ class Server:
 
         self.join_key = None
         self.connected_clients = []
+        self.threads = []
 
     def start(self, ip_address=None, port=None):
         if ip_address is not None and port is not None:
@@ -33,14 +34,29 @@ class Server:
             self.room_server.bind((ip_address, port))
         else:
             self.room_server.bind((self.ip, self.port))
+        self.room_server.listen()
 
         self.addServerTracker()
+        self.connectionListener()
 
     def addServerTracker(self):
         self.tracker_server.sendto('|'.encode('UTF-8'), TRACKER_ADDR)
         join_key, tracker = self.tracker_server.recvfrom(1024)
 
         self.join_key = join_key.decode('UTF-8')
+
+    def connectionListener(self):
+        while True:
+            client_socket, client_addr = self.room_server.accept()
+
+            if (client_socket, client_addr) not in self.connected_clients:
+                self.connected_clients.append((client_socket, client_addr))
+                self.threads.append(threading.Thread(target=self.clientWorker()).start())
+
+    def clientWorker(self):
+        client_socket, client_addr = self.connected_clients[-1]
+        while True:
+            pass
 
     def shutdown(self):
         self.shutdown = True
