@@ -175,12 +175,12 @@ class PartyScreen(tk.Frame):
 
         self.time_elapsed = ttk.Label(self, text="0:00:00")
         self.time_elapsed.place(relx=0.6, rely=0.05, anchor=tk.CENTER)
-
+        '''
         self.timeslider = ttk.Scale(self, from_=0, to=100, orient=tk.HORIZONTAL, command=self.song_scrubber)
         self.timeslider.place(relx=0.6, rely=0.1, anchor=tk.CENTER)
         self.timeslider.set(0)
         self.after_id = None
-
+        '''
         self.current_song = 0
         self.paused = False
 
@@ -213,7 +213,7 @@ class PartyScreen(tk.Frame):
                     mixer.music.play()
                 except:
                     messagebox.showerror('Error playing song', 'No song given or not .mp3 file')
-        self.update_timeslider()
+        #self.update_timeslider()
         self.current_song = selected_song
 
     def stop_music(self):
@@ -227,7 +227,7 @@ class PartyScreen(tk.Frame):
         index += 1
         self.current_song = index
         self.get_time_elapsed()
-        self.update_timeslider()
+        #self.update_timeslider()
 
     def pause_music(self):
         if self.paused == True:
@@ -241,11 +241,12 @@ class PartyScreen(tk.Frame):
         volume = float(val) / 100
         mixer.music.set_volume(volume)
         # set_volume of mixer takes value only from 0 to 1. Example - 0, 0.1,0.55,0.54.0.99,1
-
+    '''
     def song_scrubber(self, val):
         time = float(val)/1000
         mixer.music.set_pos(time)
-
+    '''
+    '''
     def update_timeslider(self, _=None):
         if self.after_id is not None:
             self.after_cancel(self.after_id)
@@ -254,7 +255,7 @@ class PartyScreen(tk.Frame):
         time = (mixer.music.get_pos() / 1000)
         self.timeslider.set(time)
         self.after_id = self.after(1000, self.update_timeslider)
-
+    '''
     def getsonglen(self):
         s = mixer.Sound(self.controller.playlist[self.current_song])
         songlength = s.get_length()
@@ -262,7 +263,7 @@ class PartyScreen(tk.Frame):
 
     def set_timescale(self):
         songlength = self.getsonglen()
-        self.timeslider.config(to=songlength)
+        #self.timeslider.config(to=songlength)
 
     def get_time_elapsed(self):
         time = int(mixer.music.get_pos() / 1000)
