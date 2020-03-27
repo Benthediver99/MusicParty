@@ -193,6 +193,7 @@ class PartyScreen(tk.Frame):
         mixer.music.queue(filename_path)
 
     def play_music(self):
+        self.get_time_elapsed()
         if self.paused:
             mixer.music.unpause()
             self.paused = False
@@ -225,6 +226,7 @@ class PartyScreen(tk.Frame):
         self.controller.playlist.insert(index, filename_path)
         index += 1
         self.current_song = index
+        self.get_time_elapsed()
 
     def pause_music(self):
         if self.paused == True:
