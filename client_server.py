@@ -1,4 +1,5 @@
 import socket
+import pickle
 import threading
 import os
 
@@ -6,7 +7,7 @@ import os
 
 SEPARATOR = "<SEPARATOR>"
 BUFFER_SIZE = 1024
-TRACKER_ADDR = ('127.0.0.1', 5555)
+TRACKER_ADDR = ('192.168.4.53', 5557)
 
 
 class Server:

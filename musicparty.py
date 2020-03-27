@@ -2,6 +2,7 @@ import socket
 import os
 import time
 import sys
+import pickle
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
@@ -23,8 +24,10 @@ class MusicParty(tk.Tk):
 
         self.room_server = None
         self.join_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.join_ip = None
+        self.join_addr = None
         self.tracker_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        self.server_thread = None
 
         self.playlist = []
 
@@ -50,7 +53,7 @@ class MusicParty(tk.Tk):
 
     def hostStartup(self):
         self.room_server = client_server.Server()
-        self.room_server.start()
+        self.server_thread = threading.Thread(target=self.room_server.start).start()
         self.showFrame(PartyScreen)
 
     def joinRoom(self):
@@ -63,13 +66,17 @@ class MusicParty(tk.Tk):
         join_addr = ttk.Entry(popup)
         join_addr.place(relx=0.5, rely=0.65, anchor=tk.CENTER)
 
-        connect_button = ttk.Button(popup, text='Connect', command=lambda: self.findRoomIP(popup, join_addr))
+        connect_button = ttk.Button(popup, text='Connect', command=lambda: self.findRoomIP(popup, join_addr.get()))
         connect_button.place(relx=0.5, rely=0.8, anchor=tk.CENTER)
 
     def findRoomIP(self, popup, join_key):
-        self.tracker_server.sendto(client_server.TRACKER_ADDR, join_key)
+        print(join_key)
+        self.tracker_server.sendto(join_key.encode('UTF-8'), client_server.TRACKER_ADDR)
+        join_addr, tracker_addr = self.tracker_server.recvfrom(1024)
+        self.join_addr = pickle.loads(join_addr)
 
         popup.destroy()
+        self.showFrame(PartyScreen)
 
     # Deals with making sure everything closes properly when closing the window
     def onClosing(self):

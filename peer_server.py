@@ -5,6 +5,7 @@ Desc: Server for P2P music streamer, stores ip's of running
 
 import socket
 import threading
+import pickle
 from random import randint
 
 # Stores list of created room servers with a random code as the key and the addr as the value
@@ -12,7 +13,8 @@ room_instances = {}
 
 host_name = socket.gethostname()
 ip = socket.gethostbyname(host_name)
-port = 5555
+print(ip)
+port = 5557
 server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 server.bind((ip, port))
@@ -21,17 +23,23 @@ shutting_down = False
 
 def newTrackerListener():
     global shutting_down
+    global room_instances
     while not shutting_down:
-        client_data, client_addr = server.recv(1024)
-        client_data.decode('UTF-8')
+        print('Rooms: {}'.format(room_instances))
+        client_data, client_addr = server.recvfrom(1024)
+        client_data = client_data.decode('UTF-8')
 
         if '|' in client_data:
+            print('New host...')
             join_key = createKey()
             room_instances.update({join_key : client_addr})
-            server.sendto(join_key, client_addr)
+            print('Room Key is: {}'.format(join_key))
+            server.sendto(join_key.encode('UTF-8'), client_addr)
         else:
-            if client_data in room_instances:
-                server.sendto(room_instances.get(client_data), client_addr)
+            print('JOIN REQUEST')
+            if client_data in room_instances.keys():
+                print('Room {} found'.format(client_data))
+                server.sendto(pickle.dumps(room_instances.get(client_data)), client_addr)
 
 
 def createKey():
@@ -39,7 +47,7 @@ def createKey():
 
     while key in room_instances.keys():
         key = randint(1000, 9999)
-    return key
+    return str(key)
 
 
 def findRoom(join_key):
@@ -54,5 +62,4 @@ def shutdown(running=True):
     shutting_down = running
 
 
-if __name__ == '__main__':
-    tracker_thread = threading.Thread(target=newTrackerListener).start()
+tracker_thread = threading.Thread(target=newTrackerListener).start()
