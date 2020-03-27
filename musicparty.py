@@ -7,7 +7,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 import threading as thread
 from pygame import mixer
-#import musicparty_server
+from mutagen.mp3 import MP3
 
 class MusicParty(tk.Tk):
     def __init__(self):
@@ -145,6 +145,9 @@ class PartyScreen(tk.Frame):
         self.controller = controller  # allows for connection and more interaction with other classes
         mixer.init()
 
+        self.current_song = 0
+        self.paused = False
+
         self.play_button = ttk.Button(self, text="Play",
                                       command=lambda: self.play_music())
         self.play_button.place(relx=0.6, rely=0.4, anchor=tk.CENTER)
@@ -154,9 +157,6 @@ class PartyScreen(tk.Frame):
 
         self.stop_button = ttk.Button(self, text="Stop", command=lambda: self.stop_music())
         self.stop_button.place(relx=0.6, rely=0.8, anchor=tk.CENTER)
-
-        self.pause_button = ttk.Button(self, text="Pause", command=lambda: self.pause_music())
-        self.pause_button.place(relx=0.6, rely=0.2, anchor=tk.CENTER)
 
         self.scale = ttk.Scale(self, from_=0, to=100,command= self.set_vol)
         self.scale.set(100)  # implement the default value of scale when music player starts
@@ -173,16 +173,20 @@ class PartyScreen(tk.Frame):
         self.playlist_list.pack(fill=tk.BOTH)
         self.playlist_list.config(width=300, height=300)
 
-        self.time_elapsed = ttk.Label(self, text="0:00:00")
+        self.time_elapsed = ttk.Label(self, text="0:00:00", font=("Verdana", 20))
         self.time_elapsed.place(relx=0.6, rely=0.05, anchor=tk.CENTER)
+
+        self.statusbar = ttk.Label(self, text="MusicParty - No Song Chosen", relief=tk.SUNKEN, anchor=tk.W, font='Times 10 italic')
+        self.statusbar.pack(side=tk.BOTTOM, fill=tk.X)
+
+        self.lengthlabel = ttk.Label(self, text="0:00:00", font=("Verdana", 20))
+        self.lengthlabel.place(relx=0.6, rely=0.15, anchor=tk.CENTER)
         '''
         self.timeslider = ttk.Scale(self, from_=0, to=100, orient=tk.HORIZONTAL, command=self.song_scrubber)
         self.timeslider.place(relx=0.6, rely=0.1, anchor=tk.CENTER)
         self.timeslider.set(0)
         self.after_id = None
         '''
-        self.current_song = 0
-        self.paused = False
 
     # functions
     def browse_file(self):
@@ -208,16 +212,14 @@ class PartyScreen(tk.Frame):
                 mixer.music.play()
             except:
                 try:
-                    song_to_play = self.controller.playlist[0]
-                    mixer.music.load(song_to_play)
+                    selected_song = self.controller.playlist[0]
+                    mixer.music.load(selected_song)
                     mixer.music.play()
                 except:
                     messagebox.showerror('Error playing song', 'No song given or not .mp3 file')
         #self.update_timeslider()
         self.current_song = selected_song
-
-    def stop_music(self):
-        mixer.music.stop()
+        self.show_details(selected_song)
 
     def add_to_playlist(self, filename):
         filename = os.path.basename(filename)
@@ -228,7 +230,7 @@ class PartyScreen(tk.Frame):
         self.current_song = index
         self.get_time_elapsed()
         #self.update_timeslider()
-
+    '''
     def pause_music(self):
         if self.paused == True:
             mixer.music.unpause()
@@ -236,11 +238,16 @@ class PartyScreen(tk.Frame):
         elif self.paused == False:
             mixer.music.pause()
             self.paused = True
-
+    '''
     def set_vol(self, val):
         volume = float(val) / 100
         mixer.music.set_volume(volume)
         # set_volume of mixer takes value only from 0 to 1. Example - 0, 0.1,0.55,0.54.0.99,1
+
+    def stop_music(self):
+        mixer.music.stop()
+        statusbar['text'] = "Music Stopped"
+
     '''
     def song_scrubber(self, val):
         time = float(val)/1000
@@ -272,6 +279,28 @@ class PartyScreen(tk.Frame):
         clock = "%d:%02d:%02d" % (h, m, s)
         self.time_elapsed.configure(text=clock)
         self.after(100, self.get_time_elapsed)
+
+    def show_details(self, play_song):
+        file_data = os.path.splitext(play_song)
+
+        if file_data[1] == '.mp3':
+            audio = MP3(play_song)
+            total_length = audio.info.length
+        else:
+            a = mixer.Sound(play_song)
+            total_length = a.get_length()
+
+        # div - total_length/60, mod - total_length % 60
+        mins, secs = divmod(total_length, 60)
+        hours, mins = divmod(mins, 60)
+        hours = round(hours)
+        mins = round(mins)
+        secs = round(secs)
+        timeformat = '{:d}:{:02d}:{:02d}'.format(hours, mins, secs)
+        self.lengthlabel['text'] = timeformat
+
+        t1 = threading.Thread(target=start_count, args=(total_length,))
+        t1.start()
 
 if __name__ == '__main__':
     app = MusicParty()
