@@ -213,13 +213,15 @@ class PartyScreen(tk.Frame):
             except:
                 try:
                     selected_song = self.controller.playlist[0]
-                    mixer.music.load(selected_song)
+                    song_to_play = self.controller.playlist[0]
+                    mixer.music.load(song_to_play)
                     mixer.music.play()
                 except:
                     messagebox.showerror('Error playing song', 'No song given or not .mp3 file')
         #self.update_timeslider()
         self.current_song = selected_song
         self.show_details(selected_song)
+        self.statusbar['text'] = "Playing music" + ' - ' + os.path.basename(song_to_play)
 
     def add_to_playlist(self, filename):
         filename = os.path.basename(filename)
@@ -298,9 +300,6 @@ class PartyScreen(tk.Frame):
         secs = round(secs)
         timeformat = '{:d}:{:02d}:{:02d}'.format(hours, mins, secs)
         self.lengthlabel['text'] = timeformat
-
-        t1 = threading.Thread(target=start_count, args=(total_length,))
-        t1.start()
 
 if __name__ == '__main__':
     app = MusicParty()
