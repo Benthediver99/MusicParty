@@ -241,43 +241,48 @@ class PartyScreen(tk.Frame):
             try:
                 self.stop_music()  # stops any music that may have already been playing
                 time.sleep(1)
-                selected_song = self.playlist_list.curselection()
-                selected_song = int(selected_song[0])
+                selected_song = self.playlist_list.curselection()  # gets tuple from playlist list tkinter widget
+                selected_song = int(selected_song[0])  # takes first value of tuple (song filepath)
                 song_to_play = self.controller.playlist[selected_song]
-                mixer.music.load(song_to_play)
-                mixer.music.play()
+                mixer.music.load(song_to_play)  # loads mp3 or wav file based on song_to_play (filepath)
+                mixer.music.play()  # plays loaded music
             except:
                 try:
-                    selected_song = self.controller.playlist[0]
+                    selected_song = self.controller.playlist[0]  # helps with variables in next try-except block
                     song_to_play = self.controller.playlist[0]
                     mixer.music.load(song_to_play)
                     mixer.music.play()
                 except:
-                    messagebox.showerror('Error playing song', 'No song given or not .mp3 file')
-        # self.update_timeslider()
-        self.current_song = selected_song
-        self.show_details(song_to_play)
-        self.statusbar['text'] = "Playing music" + ' - ' + os.path.basename(song_to_play)
+                    messagebox.showerror('Error playing song', 'No song given or not .mp3 file') # pop-up box with error
+        try:
+            # self.update_timeslider()
+            self.current_song = selected_song
+            self.show_details(song_to_play)  # updates total song length on time display and other stuff
+            self.statusbar['text'] = "Playing music" + ' - ' + os.path.basename(song_to_play)  # updates status bar
+        except:
+            pass  # for the scenario where the play button is pressed with no songs in list
 
+    # ran by check_music_thread when song ends
     def play_next_song(self):
-        if len(self.controller.playlist) == 1:
-            song_to_play = self.controller.playlist[0]
-        elif self.controller.playlist.index(self.current_song) < len(self.controller.playlist):
+        if len(self.controller.playlist) == 1:          # 1. if only one song in list
+            song_to_play = self.controller.playlist[0]  # then replay that song
+        elif self.controller.playlist.index(self.current_song) < len(self.controller.playlist):  # 2. if not last song
             song_to_play = self.controller.playlist[self.controller.playlist.index(self.current_song + 1)]
         else:
-            song_to_play = self.controller.playlist[0]
-        mixer.music.load(song_to_play)
-        mixer.music.play()
-        self.current_song = song_to_play
+            song_to_play = self.controller.playlist[0]  # 3. if last song in playlist then go back to first song
+        mixer.music.load(song_to_play)                  # load what was assigned to song_to_play in one of
+        mixer.music.play()                              # the 3 scenarios above
+        self.current_song = song_to_play  # assign song_to_play to current_song global variable
 
+    # adds filename to the playlist by adding the file path
     def add_to_playlist(self, filename):
         filename = os.path.basename(filename)
-        index = 0
-        self.playlist_list.insert(index, filename)
-        self.controller.playlist.insert(index, filename_path)
+        index = 0  # beginning of playlist
+        self.playlist_list.insert(index, filename)              # appends to the playlist_list widget
+        self.controller.playlist.insert(index, filename_path)   # appends to actual playlist list variable
         # self.index+=
-        self.current_song = filename_path
-        self.get_time_elapsed()
+        self.current_song = filename_path  # assign filename_path of selected song to current_song global variable
+        self.get_time_elapsed()            # update the total_length timer display
         # self.update_timeslider()
 
     '''
@@ -290,30 +295,36 @@ class PartyScreen(tk.Frame):
             self.paused = True
     '''
 
+    # sets volume using inputted value (val) - comes from scale widget (volume_button)
     def set_vol(self, val):
         volume = float(val) / 100
         mixer.music.set_volume(volume)
         # set_volume of mixer takes value only from 0 to 1. Example - 0, 0.1,0.55,0.54.0.99,1
 
+    # stops music that is playing
     def stop_music(self):
         mixer.music.stop()
-        self.stopped = True
-        self.statusbar['text'] = "Music Stopped"
+        self.stopped = True  # makes global stopped variable true - useful for other functions
+        self.statusbar['text'] = "Music Stopped"  # update the status to show that music has stopped
 
+    # returns the length in seconds using the current_song global variable to get data from mp3 file
     def getsonglen(self):
         s = mixer.Sound(self.controller.playlist[self.current_song])
         songlength = s.get_length()
         return songlength
 
+    '''
     def set_timescale(self):
         songlength = self.getsonglen()
         # self.timeslider.config(to=songlength)
+    '''
 
+    # takes time that has passed from song that is playing - uses pygame.mixer
     def get_time_elapsed(self):
-        time = int(mixer.music.get_pos() / 1000)
+        time = int(mixer.music.get_pos() / 1000)    # divides seconds into sec,min,hour variables
         m, s = divmod(time, 60)
         h, m = divmod(m, 60)
-        clock = "%d:%02d:%02d" % (h, m, s)
+        clock = "%d:%02d:%02d" % (h, m, s)          # sets clock string variable based on inputted h,m,s variables
         self.time_elapsed.configure(text=clock)
         self.after(100, self.get_time_elapsed)
 
