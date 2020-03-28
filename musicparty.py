@@ -140,6 +140,7 @@ class MusicParty(tk.Tk):
 
     def playlist_auto_adder(self):
         print('auto adder running...')
+        song_found = False
         directory = os.fsencode(os.getcwd())
         while True:
             for file in os.listdir(directory):
@@ -148,9 +149,12 @@ class MusicParty(tk.Tk):
                     directory_filename = os.path.basename(file)
                     for filepath in self.playlist:
                         playlist_filename = os.path.basename(filepath)
-                        if playlist_filename != directory_filename:
-                            self.playlist.insert(0, file)
-                            self.frames[PartyScreen].playlist_list.insert(0, directory_filename)  # appends to the playlist_list widget
+                        if playlist_filename == directory_filename:
+                            song_found = True
+                    if not song_found:
+                        self.playlist.insert(0, file)
+                        self.frames[PartyScreen].playlist_list.insert(0, directory_filename)  # appends to the playlist_list widget
+            song_found = False
 
     # Deals with making sure everything closes properly when closing the window
     def onClosing(self):
