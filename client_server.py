@@ -5,6 +5,7 @@ Desc: client server for clients to connect to host client
 
 import socket
 import threading
+import os
 
 # Website with TCP instruction: https://www.thepythoncode.com/article/send-receive-files-using-sockets-python
 
@@ -28,6 +29,7 @@ class Server:
 
         self.join_key = None
         self.connected_clients = []
+        self.local_directory = 'server_music\\'
 
     def start(self):
         self.room_server.bind((self.ip, self.port))
@@ -66,7 +68,10 @@ class Server:
             file_size = int(file_size)
             print('Name: {} Size: {}'.format(file_name, file_size))
 
-            song_file = open(file_name + '.mp3', 'wb')
+            if not os.path.exists(self.local_directory):
+                os.makedirs(self.local_directory)
+
+            song_file = open(self.local_directory + file_name, 'wb')
             song_data = client_socket.recv(HEADER_SIZE)
             download_progress = HEADER_SIZE
             while download_progress < file_size:
@@ -78,10 +83,28 @@ class Server:
 
             print('Song uploaded to client server...')
 
-            for other_soc, other_addr in self.connected_clients:
-                if (client_socket, client_addr) != (other_soc, other_addr):
+            threads = []
+            for (other_soc, other_addr) in self.connected_clients:
+                if (other_soc, other_addr) != (client_socket, client_addr):
                     print("Sending to {}".format(other_addr))
+                    threads.append(threading.Thread(target=self.sendFile, args=(other_soc, file_name)))
+                    threads[-1].start()
+
+            for thread in threads:
+                thread.join()
         self.connected_clients.remove((client_socket, client_addr))
+
+    def sendFile(self, client_socket, file_name):
+        song_size = os.path.getsize(self.local_directory + file_name)
+        song_header = bytes('{}{}{}'.format(file_name, SEPARATOR, song_size), 'utf-8')
+        client_socket.send(song_header)
+
+        song_file = open(self.local_directory + file_name, 'rb')
+        chunk = song_file.read(HEADER_SIZE)
+        while chunk:
+            client_socket.send(chunk)
+            chunk = song_file.read(HEADER_SIZE)
+        song_file.close()
 
     def shutdown(self):
         self.shutdown = True

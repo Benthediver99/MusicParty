@@ -35,6 +35,7 @@ class MusicParty(tk.Tk):
         self.tracker_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
         self.server_thread = None
+        self.serverListener_thread = None
 
         # list of mp3 filepaths
         self.playlist = []
@@ -61,6 +62,7 @@ class MusicParty(tk.Tk):
 
     def showFrame(self, requested_frame):
         """Takes in a frame class and raises it to the front of the GUI"""
+        print('Frame: {}'.format(requested_frame))
         frame = self.frames[requested_frame]
         frame.tkraise()
 
@@ -91,12 +93,36 @@ class MusicParty(tk.Tk):
         join_addr, tracker_addr = self.tracker_server.recvfrom(1024)
         self.join_addr = pickle.loads(join_addr)
 
-        print(self.join_addr)
+        print('roomIP addr: {}'.format(self.join_addr))
         self.join_server.connect(self.join_addr)
+        print('ip connected...')
 
         if popup is not None:
             popup.destroy()
+
         self.showFrame(PartyScreen)
+        self.serverListener_thread = threading.Thread(target=self.serverListener).start()
+
+    def serverListener(self):
+        print('Server listener started...')
+        while True:
+            song_header = self.join_server.recv(HEADER_SIZE)
+
+            file_name, file_size = song_header.decode('utf-8').split(SEPARATOR)
+            file_size = int(file_size)
+            print('RECEIVING - Name: {} Size: {}'.format(file_name, file_size))
+
+            song_file = open(file_name, 'wb')
+            song_data = self.join_server.recv(HEADER_SIZE)
+            download_progress = HEADER_SIZE
+            while download_progress < file_size:
+                print('<Client> Receiving chunk... {}/{}'.format(download_progress, file_size))
+                song_file.write(song_data)
+                song_data = self.join_server.recv(HEADER_SIZE)
+                download_progress += HEADER_SIZE
+
+            print('Song <{}> downloaded to client...'.format(file_name))
+            song_file.close()
 
     def shareFile(self, filepath):
         print('Made it to shareFile')
@@ -113,18 +139,18 @@ class MusicParty(tk.Tk):
             chunk = song_data.read(HEADER_SIZE)
 
     def playlist_auto_adder(self):
+        print('auto adder running...')
         directory = os.fsencode(os.getcwd())
         while True:
             for file in os.listdir(directory):
                 filename = os.fsdecode(file)
                 if filename.endswith(".mp3"):
                     directory_filename = os.path.basename(file)
-                    for i in self.playlist:
-                        filepath = self.controller.playlist[i]
+                    for filepath in self.playlist:
                         playlist_filename = os.path.basename(filepath)
                         if playlist_filename != directory_filename:
-                            self.controller.playlist.insert(0, file)
-                            self.playlist_list.insert(0, directory_filename)  # appends to the playlist_list widget
+                            self.playlist.insert(0, file)
+                            self.frames[PartyScreen].playlist_list.insert(0, directory_filename)  # appends to the playlist_list widget
 
     # Deals with making sure everything closes properly when closing the window
     def onClosing(self):
