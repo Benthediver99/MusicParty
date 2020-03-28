@@ -55,7 +55,7 @@ class Server:
         while not self.shutdown:
             new_song = True
             while True:
-                song_data = self.room_server.recv(HEADER_SIZE)
+                song_data = client_socket.recv(HEADER_SIZE)
 
                 if not song_data:
                     print("Client disconnect")
