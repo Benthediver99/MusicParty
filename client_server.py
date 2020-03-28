@@ -1,3 +1,8 @@
+"""
+Developers: Braxton Laster, Ben Rader
+Desc: client server for clients to connect to host client
+"""
+
 import socket
 import threading
 

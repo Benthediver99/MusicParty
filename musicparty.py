@@ -1,3 +1,8 @@
+"""
+Developers: Braxton Laster, Ben Rader
+Desc: Main GUI and application of MusicParty
+"""
+
 import socket
 import os
 import time
