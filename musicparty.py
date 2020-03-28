@@ -8,6 +8,7 @@ import os
 import time
 import sys
 import pickle
+import glob
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
@@ -143,18 +144,13 @@ class MusicParty(tk.Tk):
         song_found = False
         directory = os.fsencode(os.getcwd())
         while True:
-            for file in os.listdir(directory):
-                filename = os.fsdecode(file)
-                if filename.endswith(".mp3"):
-                    directory_filename = os.path.basename(file)
-                    for filepath in self.playlist:
-                        playlist_filename = os.path.basename(filepath)
-                        if playlist_filename == directory_filename:
-                            song_found = True
-                    if not song_found:
-                        self.playlist.insert(0, file)
-                        self.frames[PartyScreen].playlist_list.insert(0, directory_filename)  # appends to the playlist_list widget
-            song_found = False
+            music_files = [f for f in glob.glob('*.mp3', recursive=True)]
+            for song in music_files:
+                if song not in filter(lambda song: os.path.basename(song), self.playlist):
+                    print('Found: {}'.format(song))
+                    self.playlist.insert(0, song)
+                    self.frames[PartyScreen].playlist_list.insert(0, song)  # appends to the playlist_list widget
+            time.sleep(2)
 
     # Deals with making sure everything closes properly when closing the window
     def onClosing(self):
@@ -367,7 +363,7 @@ class PartyScreen(tk.Frame):
     def add_to_playlist(self, filename):
         filename = os.path.basename(filename)
         index = 0  # beginning of playlist
-        self.playlist_list.insert(index, filename)  # appends to the playlist_list widget
+        # self.playlist_list.insert(index, filename)  # appends to the playlist_list widget
         self.controller.playlist.insert(index, filename_path)  # appends to actual playlist list variable
         # self.index+=
         self.current_song = filename_path  # assign filename_path of selected song to current_song global variable
