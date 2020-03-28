@@ -18,7 +18,7 @@ from pygame import mixer
 from mutagen.mp3 import MP3
 import client_server
 
-HEADER_SIZE = 1024
+HEADER_SIZE = 4096
 SEPARATOR = '|'
 
 
@@ -99,11 +99,13 @@ class MusicParty(tk.Tk):
         song_name = os.path.basename(filepath)
         song_size = os.path.getsize(filepath)
 
-        print('Song Name: {} Size: {}'.format(song_name, song_size))
-        # https://pythonprogramming.net/pickle-objects-sockets-tutorial-python-3/
-        song_header = bytes(f'{song_name}{SEPARATOR}{song_size:<{HEADER_SIZE}}', 'utf-8')
+        song_header = bytes('{}{}{}'.format(song_name, SEPARATOR, song_size), 'utf-8')
         self.join_server.send(song_header)
-        self.join_server.send(song_data)
+
+        chunk = song_data.read(HEADER_SIZE)
+        while chunk:
+            self.join_server.send(chunk)
+            chunk = song_data.read(HEADER_SIZE)
 
     # Deals with making sure everything closes properly when closing the window
     def onClosing(self):

@@ -8,7 +8,7 @@ import threading
 
 # Website with TCP instruction: https://www.thepythoncode.com/article/send-receive-files-using-sockets-python
 
-HEADER_SIZE = 1024
+HEADER_SIZE = 4096
 SEPARATOR = '|'
 TRACKER_ADDR = ('192.168.4.53', 5557)
 
@@ -56,25 +56,32 @@ class Server:
         print('Client {} running worker...'.format(client_addr))
 
         while not self.shutdown:
-            new_song = True
-            while True:
+            song_header = client_socket.recv(HEADER_SIZE)
+
+            if not song_header:
+                print("Client disconnect")
+                break
+
+            file_name, file_size = song_header.decode('utf-8').split(SEPARATOR)
+            file_size = int(file_size)
+            print('Name: {} Size: {}'.format(file_name, file_size))
+
+            song_file = open(file_name + '.mp3', 'wb')
+            song_data = client_socket.recv(HEADER_SIZE)
+            download_progress = HEADER_SIZE
+            while download_progress < file_size:
+                print('<Server> Receiving chunk...')
+                song_file.write(song_data)
                 song_data = client_socket.recv(HEADER_SIZE)
+                download_progress += HEADER_SIZE
+            song_file.close()
 
-                if not song_data:
-                    print("Client disconnect")
-                    break
-                elif new_song:
-                    print("new msg len:", song_data[:HEADER_SIZE])
-                    msglen = int(msg[:HEADER_SIZE])
+            print('Song uploaded to client server...')
 
-                    file_name, file_size = song_data.decode('utf-8').split(SEPARATOR)
-                    print('Name: {} Size: {}'.format(file_name, file_size))
-                    new_msg = False
-
-                for other_soc, other_addr in self.connected_clients:
-                    if (client_socket, client_addr) != (other_soc, other_addr):
-                        print("Sending to {}".format(other_addr))
-            self.connected_clients.remove((client_socket, client_addr))
+            for other_soc, other_addr in self.connected_clients:
+                if (client_socket, client_addr) != (other_soc, other_addr):
+                    print("Sending to {}".format(other_addr))
+        self.connected_clients.remove((client_socket, client_addr))
 
     def shutdown(self):
         self.shutdown = True
