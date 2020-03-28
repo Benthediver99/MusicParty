@@ -54,6 +54,11 @@ class MusicParty(tk.Tk):
 
         self.showFrame(MainMenu)
 
+        # create and run thread to automate playlist
+        self.playlist_autoadd_thread = threading.Thread(target=self.playlist_auto_adder)
+        self.playlist_autoadd_thread.start()
+
+
     def showFrame(self, requested_frame):
         """Takes in a frame class and raises it to the front of the GUI"""
         frame = self.frames[requested_frame]
@@ -119,8 +124,7 @@ class MusicParty(tk.Tk):
                         playlist_filename = os.path.basename(filepath)
                         if playlist_filename != directory_filename:
                             self.controller.playlist.insert(0, file)
-            
-
+                            self.playlist_list.insert(0, directory_filename)  # appends to the playlist_list widget
 
     # Deals with making sure everything closes properly when closing the window
     def onClosing(self):
@@ -154,7 +158,7 @@ class MainMenu(tk.Frame):
         help_button = ttk.Button(self, text="Help", command=lambda: controller.showFrame(Help))
         help_button.place(height=40, width=300, relx=0.50, rely=0.65, anchor=tk.CENTER)
 
-        music_player = ttk.Button(self, text="Music Player", command=lambda: controller.showFrame(PartyScreen))
+        music_player = ttk.Button(self, text="Music Player GUI", command=lambda: controller.showFrame(PartyScreen))
         music_player.place(height=40, width=300, relx=0.50, rely=0.80, anchor=tk.CENTER)
 
 

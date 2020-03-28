@@ -8,13 +8,18 @@ song is added to a peers list, then all the other peers download that
 song immediately, and can play it individually.  
 ______________________________________________________________________
 
-**How to start up 'Music Party':**
+**How to set up 'Music Party':**
 
     1. Have some version of Python installed (3.0 or higher probably)
     2. Run these commands in command prompt:
 	a. pip install pygame
 	b. pip install mutagen.mp3
-    3. command prompt: cd to folder where musicparty.py is located
+	4. Run tracker_server.py
+	    - take IP and port # from terminal after it runs [IP]:[port #]
+	5. Manually edit client_server.py
+	    - On line 13 -> TRACKER_ADDR = ('192.168.4.53', 5557)
+	        -change the IP and Port # to the one you got in tracker_server.py
+    5. command prompt: cd to folder where musicparty.py is located
     	-Run musicparty.py ([filepath] python musicparty.py)	
 
 **How to host MusicParty:**
@@ -24,10 +29,10 @@ ______________________________________________________________________
 **Authors:**
 
 	Benjamin Rader:
-	    -
+	    - MusicParty music player GUI
 
 	Braxton Laster:
-		-
+		- Sockets, servers, and networking
 
 **Posibble upgrades:**
 
