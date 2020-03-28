@@ -71,14 +71,9 @@ class Server:
                     print('Name: {} Size: {}'.format(file_name, file_size))
                     new_msg = False
 
-                print(f"full message length: {msglen}")
-
-                print("Got: {}".format(msg))
-                msg = msg.decode('ascii')
                 for other_soc, other_addr in self.connected_clients:
                     if (client_socket, client_addr) != (other_soc, other_addr):
                         print("Sending to {}".format(other_addr))
-                        other_soc.sendall(msg.encode('ascii'))
             self.connected_clients.remove((client_socket, client_addr))
 
     def shutdown(self):
