@@ -16,6 +16,8 @@ ip = socket.gethostbyname(host_name)
 port = 5557
 server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
+print('{}:{}'.format(ip, port))
+
 server.bind((ip, port))
 shutting_down = False
 
@@ -31,7 +33,11 @@ def newTrackerListener():
         if '|' in client_data:
             print('New host...')
             join_key = createKey()
-            room_instances.update({join_key : client_addr})
+
+            room_port = client_data.split('|')
+            room_port = int(room_port[1])
+
+            room_instances.update({join_key : (client_addr[0], room_port)})
             print('Room Key is: {}'.format(join_key))
             server.sendto(join_key.encode('UTF-8'), client_addr)
         else:
