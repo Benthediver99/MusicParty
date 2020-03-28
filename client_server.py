@@ -18,7 +18,7 @@ class Server:
 
         self.room_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.tracker_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.port = 5555
+        self.port = 5558
         self.shutdown = False
 
         self.join_key = None
@@ -42,6 +42,7 @@ class Server:
         join_key, tracker = self.tracker_server.recvfrom(1024)
 
         self.join_key = join_key.decode('UTF-8')
+        print('key is {}'.format(self.join_key))
 
     def connectionListener(self):
         while True:
@@ -54,31 +55,35 @@ class Server:
     def clientWorker(self):
         client_socket, client_addr = self.connected_clients[-1]
 
-        new_song = True
-        while not self.shutdown():
-            song_data = self.room_server.recv(HEADER_SIZE)
+        while not self.shutdown:
+            new_song = True
+            while True:
+                song_data = self.room_server.recv(HEADER_SIZE)
 
-            if not song_data:
-                print("Client disconnect")
-                break
-            elif new_song:
-                print("new msg len:", song_data[:HEADER_SIZE])
-                msglen = int(msg[:HEADER_SIZE])
-                new_msg = False
+                if not song_data:
+                    print("Client disconnect")
+                    break
+                elif new_song:
+                    print("new msg len:", song_data[:HEADER_SIZE])
+                    msglen = int(msg[:HEADER_SIZE])
 
-            print(f"full message length: {msglen}")
+                    file_name, file_size = song_data.decode('utf-8').split(SEPARATOR)
+                    print('Name: {} Size: {}'.format(file_name, file_size))
+                    new_msg = False
 
-            print("Got: {}".format(msg))
-            msg = msg.decode('ascii')
-            for other_soc, other_addr in self.connected_clients:
-                if (client_socket, client_addr) != (other_soc, other_addr):
-                    print("Sending to {}".format(other_addr))
-                    other_soc.sendall(msg.encode('ascii'))
-        self.connected_clients.remove((client_socket, client_addr))
+                print(f"full message length: {msglen}")
+
+                print("Got: {}".format(msg))
+                msg = msg.decode('ascii')
+                for other_soc, other_addr in self.connected_clients:
+                    if (client_socket, client_addr) != (other_soc, other_addr):
+                        print("Sending to {}".format(other_addr))
+                        other_soc.sendall(msg.encode('ascii'))
+            self.connected_clients.remove((client_socket, client_addr))
 
     def shutdown(self):
         self.shutdown = True
-        self.server.close()
+        self.room_server.close()
 
         for thread in self.threads:
             thread.join()

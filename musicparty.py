@@ -57,6 +57,9 @@ class MusicParty(tk.Tk):
     def hostStartup(self):
         self.room_server = client_server.Server()
         self.server_thread = threading.Thread(target=self.room_server.start).start()
+
+        while not self.room_server.join_key:
+            pass
         self.findRoomIP(self.room_server.join_key)
 
     def joinRoom(self):
@@ -73,23 +76,29 @@ class MusicParty(tk.Tk):
         connect_button.place(relx=0.5, rely=0.8, anchor=tk.CENTER)
 
     def findRoomIP(self, join_key, popup=None):
-        print(join_key)
+        print('findRoomIP Joinkey: {}'.format(join_key))
         self.tracker_server.sendto(join_key.encode('UTF-8'), client_server.TRACKER_ADDR)
         join_addr, tracker_addr = self.tracker_server.recvfrom(1024)
         self.join_addr = pickle.loads(join_addr)
+
+        print(self.join_addr)
+        self.join_server.connect(self.join_addr)
 
         if popup is not None:
             popup.destroy()
         self.showFrame(PartyScreen)
 
     def shareFile(self, filepath):
+        print('Made it to shareFile')
         song_data = open(filepath, 'rb')
         song_name = os.path.basename(filepath)
         song_size = os.path.getsize(filepath)
 
+        print('Song Name: {} Size: {}'.format(song_name, song_size))
         # https://pythonprogramming.net/pickle-objects-sockets-tutorial-python-3/
-        song_data = bytes(f'{song_name}{SEPARATOR}{song_size:<{HEADER_SIZE}}', 'utf-8') + song_data
-        self.room_server.send(song_data)
+        song_header = bytes(f'{song_name}{SEPARATOR}{song_size:<{HEADER_SIZE}}', 'utf-8')
+        self.join_server.send(song_header)
+        self.join_server.send(song_data)
 
     # Deals with making sure everything closes properly when closing the window
     def onClosing(self):
@@ -241,9 +250,10 @@ class PartyScreen(tk.Frame):
     def browse_file(self):
         global filename_path
         filename_path = filedialog.askopenfilename()
+
         if filename_path:
             self.add_to_playlist(filename_path)
-            threading.Thread(target=self.controller.shareFile, args=filename_path)
+            threading.Thread(target=self.controller.shareFile, args=[filename_path]).start()
 
     # plays selected music and runs related functions
     def play_music(self):
