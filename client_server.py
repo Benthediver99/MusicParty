@@ -23,7 +23,6 @@ class Server:
 
         self.join_key = None
         self.connected_clients = []
-        self.threads = []
 
     def start(self):
         self.room_server.bind((self.ip, self.port))
@@ -41,15 +40,14 @@ class Server:
     def connectionListener(self):
         print('Running connection listener...')
         while True:
+            print('Back to waiting...')
             client_socket, client_addr = self.room_server.accept()
 
-            print('Got {}'.format(client_addr))
             self.connected_clients.append((client_socket, client_addr))
-            self.threads.append(threading.Thread(target=self.clientWorker()))
-            self.threads[-1].start()
+            threading.Thread(target=self.clientWorker, args=[self.connected_clients]).start()
 
-    def clientWorker(self):
-        client_socket, client_addr = self.connected_clients[-1]
+    def clientWorker(self, connected_clients):
+        client_socket, client_addr = connected_clients[-1]
         print('Client {} running worker...'.format(client_addr))
 
         while not self.shutdown:
