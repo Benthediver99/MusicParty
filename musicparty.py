@@ -219,14 +219,15 @@ class PartyScreen(tk.Frame):
         self.stop_button.place(relx=0.73, rely=0.8, anchor=tk.CENTER)
 
         # slider for controlling volume - runs set_vol()
-        self.volume_button = ttk.Scale(self, from_=0, to=100, command=self.set_vol)
+        self.volume_button = ttk.Scale(self, from_=0, to=100, command=self.set_vol,
+                                       length=150)
         self.volume_button.set(100)  # implement the default value of scale when music player starts
         mixer.music.set_volume(1.0)  # sets default volume to max
         self.volume_button.place(relx=0.73, rely=0.9, anchor=tk.CENTER)
 
         # display for list of mp3 names as they are added
         # allows for song to be selected via cursor press
-        self.playlist_frame = ttk.LabelFrame(self, text="Song Playlist")
+        self.playlist_frame = ttk.LabelFrame(self, text="Song List")
         self.playlist_frame.place(x=30, y=30, width=300, height=300)
         self.playlist_scroll = ttk.Scrollbar(self.playlist_frame, orient=tk.VERTICAL)
         self.playlist_list = tk.Listbox(self.playlist_frame, yscrollcommand=self.playlist_scroll.set,
