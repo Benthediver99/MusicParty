@@ -13,7 +13,6 @@ room_instances = {}
 
 host_name = socket.gethostname()
 ip = socket.gethostbyname(host_name)
-print(ip)
 port = 5557
 server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -48,13 +47,6 @@ def createKey():
     while key in room_instances.keys():
         key = randint(1000, 9999)
     return str(key)
-
-
-def findRoom(join_key):
-    if join_key in room_instances:
-        return room_instances.get(join_key)
-    else:
-        return False
 
 
 def shutdown(running=True):

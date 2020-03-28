@@ -1,12 +1,10 @@
 import socket
-import pickle
 import threading
-import os
 
 # Website with TCP instruction: https://www.thepythoncode.com/article/send-receive-files-using-sockets-python
 
-SEPARATOR = "<SEPARATOR>"
-BUFFER_SIZE = 1024
+HEADER_SIZE = 1024
+SEPARATOR = '|'
 TRACKER_ADDR = ('192.168.4.53', 5557)
 
 
@@ -55,9 +53,32 @@ class Server:
 
     def clientWorker(self):
         client_socket, client_addr = self.connected_clients[-1]
-        while True:
-            pass
+
+        new_song = True
+        while not self.shutdown():
+            song_data = self.room_server.recv(HEADER_SIZE)
+
+            if not song_data:
+                print("Client disconnect")
+                break
+            elif new_song:
+                print("new msg len:", song_data[:HEADER_SIZE])
+                msglen = int(msg[:HEADER_SIZE])
+                new_msg = False
+
+            print(f"full message length: {msglen}")
+
+            print("Got: {}".format(msg))
+            msg = msg.decode('ascii')
+            for other_soc, other_addr in self.connected_clients:
+                if (client_socket, client_addr) != (other_soc, other_addr):
+                    print("Sending to {}".format(other_addr))
+                    other_soc.sendall(msg.encode('ascii'))
+        self.connected_clients.remove((client_socket, client_addr))
 
     def shutdown(self):
         self.shutdown = True
         self.server.close()
+
+        for thread in self.threads:
+            thread.join()
