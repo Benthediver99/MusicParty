@@ -107,10 +107,11 @@ class MusicParty(tk.Tk):
     # Takes a join key as input and sends it to tracker server to get server address back, connects to address
     def findRoomIP(self, join_key, popup=None):
         self.displayable_joinkey.set('Join Key: ' + join_key)
+
         self.tracker_server.sendto(join_key.encode('UTF-8'), client_server.TRACKER_ADDR)
         join_addr, tracker_addr = self.tracker_server.recvfrom(1024)
-        self.join_addr = pickle.loads(join_addr)
 
+        self.join_addr = pickle.loads(join_addr)
         self.join_server.connect(self.join_addr)
 
         if popup is not None:

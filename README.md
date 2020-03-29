@@ -18,7 +18,7 @@ ______________________________________________________________________
 	4. Run tracker_server.py
 	    - take IP and port # from terminal after it runs [IP]:[port #]
 	5. Manually edit client_server.py
-	    - On line 13 -> TRACKER_ADDR = ('192.168.4.53', 5557)
+	    - On line 13 -> TRACKER_ADDR = ('127.0.0.1', 5557)
 	        -change the IP and Port # to the one you got from tracker_server.py
     5. command prompt: cd to folder where musicparty.py is located
     	-Run musicparty.py ([filepath] python musicparty.py)	
@@ -26,9 +26,11 @@ ______________________________________________________________________
 **How to host MusicParty:**
 
     Just run musicparty.py and click the host button. When the music playlist screen opens
-    
+    The server for that room should be ready, give/use the join key listed in the top right
+    to allow other clients to join the server
 
 **How to Join MusicParty:**
+    Press the join button and enter the 4 digit key given by the host
 
 **Authors:**
 
@@ -40,7 +42,7 @@ ______________________________________________________________________
 
 **Posibble upgrades:**
 
-	-port forwarding via. hole punching
+	-TCP hole punching
 	-more gui/fancier gui
 	-"scrubber" to scrub through mp3 file
 	-metadata processing
