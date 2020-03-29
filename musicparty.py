@@ -34,7 +34,7 @@ class MusicParty(tk.Tk):
         self.protocol('WM_DELETE_WINDOW', self.onClosing)  # when the window is closed run our onClosing function
 
         # server variables
-        self.room_server = None
+        self.room_server = client_server.Server()
         self.join_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.join_addr = None
         self.tracker_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -119,7 +119,7 @@ class MusicParty(tk.Tk):
 
     def serverListener(self):
         print('Server listener started...')
-        while self.SERVER_LISTENING:
+        while self.flags[SERVER_LISTENING]:
             song_header = self.join_server.recv(HEADER_SIZE)
 
             file_name, file_size = song_header.decode('utf-8').split(SEPARATOR)
@@ -137,7 +137,7 @@ class MusicParty(tk.Tk):
 
             print('Song <{}> downloaded to client...'.format(file_name))
             song_file.close()
-
+        print("server listener stopped...")
     def shareFile(self, filepath):
         print('Made it to shareFile')
         song_data = open(filepath, 'rb')
@@ -157,7 +157,7 @@ class MusicParty(tk.Tk):
         print('auto adder running...')
         song_found = False
         directory = os.fsencode(os.getcwd())
-        while PLAYLIST_ADDER:  # uses flag to run while tkinter window is open
+        while self.flags[PLAYLIST_ADDER]:  # uses flag to run while tkinter window is open
             music_files = [f for f in glob.glob('*.mp3', recursive=True)]  # puts all mp3 files in current directory
             for song in music_files:                                       # into a list (music_files)
                 if song not in filter(lambda song: os.path.basename(song), self.playlist):
@@ -167,18 +167,15 @@ class MusicParty(tk.Tk):
                     if song not in self.added_songs:    # if song hasn't been added to the gui list then add it
                         self.frames[PartyScreen].playlist_list.insert(0, song)  # appends to the playlist_list widget
             time.sleep(2)   # run the adder every 2 seconds
+        print("auto adder stopped...")
 
     # Deals with making sure everything closes properly when closing the window
     def onClosing(self):
-        try:
-            self.destroy()
-            self.server.shutdown()
-            self.flags[SERVER_LISTENING] = False    # break Server listener while loop
-            self.flags[PLAYLIST_ADDER] = False      # break playlist adder while loop
-        except:
-            sys.exit(0)
-
-
+        self.destroy()
+        self.room_server.shutdown()
+        self.flags[SERVER_LISTENING] = False  # break Server listener while loop
+        self.flags[PLAYLIST_ADDER] = False  # break playlist adder while loop
+        sys.exit(0)
 
 class MainMenu(tk.Frame):
     def __init__(self, parent, controller):

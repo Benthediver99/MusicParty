@@ -13,7 +13,6 @@ HEADER_SIZE = 4096
 SEPARATOR = '|'
 TRACKER_ADDR = ('192.168.4.53', 5557)
 
-
 class Server:
     def __init__(self):
         try:
@@ -25,7 +24,7 @@ class Server:
         self.room_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.tracker_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.port = 5558
-        self.shutdown = False
+        self.shutdown_flag = False
 
         self.join_key = None
         self.connected_clients = []
@@ -46,7 +45,7 @@ class Server:
 
     def connectionListener(self):
         print('Running connection listener...')
-        while True:
+        while not self.shutdown:
             print('Back to waiting...')
             client_socket, client_addr = self.room_server.accept()
 
@@ -107,8 +106,6 @@ class Server:
         song_file.close()
 
     def shutdown(self):
-        self.shutdown = True
+        self.shutdown_flag = True
         self.room_server.close()
-
-        for thread in self.threads:
-            thread.join()
+        print("client_server shutdown...")
