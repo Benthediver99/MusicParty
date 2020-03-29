@@ -12,7 +12,6 @@ import glob
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
-from tkinter import messagebox
 import threading
 import pygame
 from pygame import mixer
@@ -26,11 +25,12 @@ SEPARATOR = '|'
 PLAYLIST_ADDER = 'PLAYLIST_ADDER'
 SERVER_LISTENING = 'SERVER_LISTENING'
 
+
 class MusicParty(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
         self.title('MusicParty')  # sets the title of the tkinter window
-        self.resizable(False, False)  #window can't be resized
+        self.resizable(False, False)  # window can't be resized
         self.protocol('WM_DELETE_WINDOW', self.onClosing)  # when the window is closed run our onClosing function
 
         # server variables
@@ -155,11 +155,9 @@ class MusicParty(tk.Tk):
     # automatically adds songs that are in current working directory into playlist - adds songs that are added
     def playlist_auto_adder(self):
         print('auto adder running...')
-        song_found = False
-        directory = os.fsencode(os.getcwd())
-        while self.flags[PLAYLIST_ADDER]:  # uses flag to run while tkinter window is open
-            music_files = [f for f in glob.glob('*.mp3', recursive=True)]  # puts all mp3 files in current directory
-            for song in music_files:                                       # into a list (music_files)
+        while self.flags[PLAYLIST_ADDER]:  # uses flag to run while tkinter window is open:
+            music_files = [f for f in glob.glob('*.mp3', recursive=True)] # puts all mp3 files in current directory
+            for song in music_files: # into a list (music_files)
                 if song not in filter(lambda song: os.path.basename(song), self.playlist):
                     '''If song isn't already in the playlist for music party then add it to the playlist'''
                     print('Found: {}'.format(song))
@@ -171,11 +169,14 @@ class MusicParty(tk.Tk):
 
     # Deals with making sure everything closes properly when closing the window
     def onClosing(self):
-        self.destroy()
+        mixer.music.stop()
         self.room_server.shutdown()
         self.flags[SERVER_LISTENING] = False  # break Server listener while loop
         self.flags[PLAYLIST_ADDER] = False  # break playlist adder while loop
+
+        self.destroy()
         sys.exit(0)
+
 
 class MainMenu(tk.Frame):
     def __init__(self, parent, controller):
@@ -319,7 +320,7 @@ class PartyScreen(tk.Frame):
     # adds mp3 to global playlist list
     def browse_file(self):
         global filename_path
-        filename_path = filedialog.askopenfilename()
+        filename_path = tk.filedialog.askopenfilename()
 
         if filename_path:
             self.add_to_playlist(filename_path)
@@ -349,7 +350,7 @@ class PartyScreen(tk.Frame):
                     mixer.music.load(song_to_play)
                     mixer.music.play()
                 except:
-                    messagebox.showerror('Error playing song',
+                    tk.messagebox.showerror('Error playing song',
                                          'No song given or not .mp3 file')  # pop-up box with error
         try:
             # self.update_timeslider()

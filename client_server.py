@@ -13,6 +13,7 @@ HEADER_SIZE = 4096
 SEPARATOR = '|'
 TRACKER_ADDR = ('192.168.4.53', 5557)
 
+
 class Server:
     def __init__(self):
         try:
@@ -45,9 +46,13 @@ class Server:
 
     def connectionListener(self):
         print('Running connection listener...')
-        while not self.shutdown:
+        while not self.shutdown_flag:
             print('Back to waiting...')
-            client_socket, client_addr = self.room_server.accept()
+
+            try:
+                client_socket, client_addr = self.room_server.accept()
+            except:
+                pass
 
             self.connected_clients.append((client_socket, client_addr))
             threading.Thread(target=self.clientWorker, args=[self.connected_clients]).start()
@@ -56,7 +61,7 @@ class Server:
         client_socket, client_addr = connected_clients[-1]
         print('Client {} running worker...'.format(client_addr))
 
-        while not self.shutdown:
+        while not self.shutdown_flag:
             song_header = client_socket.recv(HEADER_SIZE)
 
             if not song_header:
@@ -91,6 +96,8 @@ class Server:
 
             for thread in threads:
                 thread.join()
+
+        print('Client disconnected...')
         self.connected_clients.remove((client_socket, client_addr))
 
     def sendFile(self, client_socket, file_name):
