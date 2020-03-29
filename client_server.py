@@ -45,13 +45,13 @@ class Server:
         self.join_key = join_key.decode('UTF-8')
 
     def connectionListener(self):
-        print('Running connection listener...')
         while not self.shutdown_flag:
-            print('Back to waiting...')
+            client_socket = None
+            client_addr = None
 
             try:
                 client_socket, client_addr = self.room_server.accept()
-            except:
+            except socket.error:
                 pass
 
             self.connected_clients.append((client_socket, client_addr))
@@ -59,18 +59,15 @@ class Server:
 
     def clientWorker(self, connected_clients):
         client_socket, client_addr = connected_clients[-1]
-        print('Client {} running worker...'.format(client_addr))
 
         while not self.shutdown_flag:
             song_header = client_socket.recv(HEADER_SIZE)
 
             if not song_header:
-                print("Client disconnect")
                 break
 
             file_name, file_size = song_header.decode('utf-8').split(SEPARATOR)
             file_size = int(file_size)
-            print('Name: {} Size: {}'.format(file_name, file_size))
 
             if not os.path.exists(self.local_directory):
                 os.makedirs(self.local_directory)
@@ -79,25 +76,20 @@ class Server:
             song_data = client_socket.recv(HEADER_SIZE)
             download_progress = HEADER_SIZE
             while download_progress < file_size:
-                print('<Server> Receiving chunk...')
                 song_file.write(song_data)
                 song_data = client_socket.recv(HEADER_SIZE)
                 download_progress += HEADER_SIZE
             song_file.close()
 
-            print('Song uploaded to client server...')
-
             threads = []
             for (other_soc, other_addr) in self.connected_clients:
                 if (other_soc, other_addr) != (client_socket, client_addr):
-                    print("Sending to {}".format(other_addr))
                     threads.append(threading.Thread(target=self.sendFile, args=(other_soc, file_name)))
                     threads[-1].start()
 
             for thread in threads:
                 thread.join()
 
-        print('Client disconnected...')
         self.connected_clients.remove((client_socket, client_addr))
 
     def sendFile(self, client_socket, file_name):
@@ -115,4 +107,3 @@ class Server:
     def shutdown(self):
         self.shutdown_flag = True
         self.room_server.close()
-        print("client_server shutdown...")

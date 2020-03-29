@@ -76,7 +76,6 @@ class MusicParty(tk.Tk):
     # function to bring requested frame to the front of the tkinter window
     def showFrame(self, requested_frame):
         """Takes in a frame class and raises it to the front of the GUI"""
-        print('Frame: {}'.format(requested_frame))
         frame = self.frames[requested_frame]
         frame.tkraise()
 
@@ -102,14 +101,11 @@ class MusicParty(tk.Tk):
         connect_button.place(relx=0.5, rely=0.8, anchor=tk.CENTER)
 
     def findRoomIP(self, join_key, popup=None):
-        print('findRoomIP Joinkey: {}'.format(join_key))
         self.tracker_server.sendto(join_key.encode('UTF-8'), client_server.TRACKER_ADDR)
         join_addr, tracker_addr = self.tracker_server.recvfrom(1024)
         self.join_addr = pickle.loads(join_addr)
 
-        print('roomIP addr: {}'.format(self.join_addr))
         self.join_server.connect(self.join_addr)
-        print('ip connected...')
 
         if popup is not None:
             popup.destroy()
@@ -118,28 +114,23 @@ class MusicParty(tk.Tk):
         self.serverListener_thread = threading.Thread(target=self.serverListener).start()
 
     def serverListener(self):
-        print('Server listener started...')
         while self.flags[SERVER_LISTENING]:
             song_header = self.join_server.recv(HEADER_SIZE)
 
             file_name, file_size = song_header.decode('utf-8').split(SEPARATOR)
             file_size = int(file_size)
-            print('RECEIVING - Name: {} Size: {}'.format(file_name, file_size))
 
             song_file = open(file_name, 'wb')
             song_data = self.join_server.recv(HEADER_SIZE)
             download_progress = HEADER_SIZE
             while download_progress < file_size:
-                print('<Client> Receiving chunk... {}/{}'.format(download_progress, file_size))
                 song_file.write(song_data)
                 song_data = self.join_server.recv(HEADER_SIZE)
                 download_progress += HEADER_SIZE
 
-            print('Song <{}> downloaded to client...'.format(file_name))
             song_file.close()
-        print("server listener stopped...")
+
     def shareFile(self, filepath):
-        print('Made it to shareFile')
         song_data = open(filepath, 'rb')
         song_name = os.path.basename(filepath)
         song_size = os.path.getsize(filepath)
@@ -154,18 +145,15 @@ class MusicParty(tk.Tk):
 
     # automatically adds songs that are in current working directory into playlist - adds songs that are added
     def playlist_auto_adder(self):
-        print('auto adder running...')
         while self.flags[PLAYLIST_ADDER]:  # uses flag to run while tkinter window is open:
-            music_files = [f for f in glob.glob('*.mp3', recursive=True)] # puts all mp3 files in current directory
-            for song in music_files: # into a list (music_files)
-                if song not in filter(lambda song: os.path.basename(song), self.playlist):
+            music_files = [f for f in glob.glob('*.mp3', recursive=True)]  # puts all mp3 files in current directory
+            for song in music_files:  # into a list (music_files)
+                if song not in filter(lambda file: os.path.basename(file), self.playlist):
                     '''If song isn't already in the playlist for music party then add it to the playlist'''
-                    print('Found: {}'.format(song))
                     self.playlist.insert(0, song)       # append to the playlist
                     if song not in self.added_songs:    # if song hasn't been added to the gui list then add it
                         self.frames[PartyScreen].playlist_list.insert(0, song)  # appends to the playlist_list widget
             time.sleep(2)   # run the adder every 2 seconds
-        print("auto adder stopped...")
 
     # Deals with making sure everything closes properly when closing the window
     def onClosing(self):
@@ -391,16 +379,6 @@ class PartyScreen(tk.Frame):
         self.add_to_playlist_status_thread = threading.Thread(target=self.add_to_playlist_status, args= [self.current_song_playing])
         self.add_to_playlist_status_thread.start()
 
-    '''
-    def pause_music(self):
-        if self.paused == True:
-            mixer.music.unpause()
-            self.paused = False
-        elif self.paused == False:
-            mixer.music.pause()
-            self.paused = True
-    '''
-
     # sets volume using inputted value (val) - comes from scale widget (volume_button)
     def set_vol(self, val):
         volume = float(val) / 100
@@ -418,12 +396,6 @@ class PartyScreen(tk.Frame):
         s = mixer.Sound(self.controller.playlist[self.current_song])
         songlength = s.get_length()
         return songlength
-
-    '''
-    def set_timescale(self):
-        songlength = self.getsonglen()
-        # self.timeslider.config(to=songlength)
-    '''
 
     # takes time that has passed from song that is playing - uses pygame.mixer
     def get_time_elapsed(self):
@@ -469,6 +441,7 @@ class PartyScreen(tk.Frame):
             self.statusbar['text'] = "Song selected" + ' : ' + os.path.basename(songname)  # updates status bar
             time.sleep(5)
             self.statusbar['text'] = "Playing music - " + os.path.basename(self.current_song_playing)  # updates status bar
+
     #
     def show_details(self, play_song):
         file_data = os.path.splitext(play_song)
