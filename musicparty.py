@@ -90,6 +90,7 @@ class MusicParty(tk.Tk):
             pass
         self.findRoomIP(self.room_server.join_key)
 
+    # Creates a popup for user to enter a key to join a server
     def joinRoom(self):
         popup = tk.Toplevel()
         popup.title('Join a Room')
@@ -103,6 +104,7 @@ class MusicParty(tk.Tk):
         connect_button = ttk.Button(popup, text='Connect', command=lambda: self.findRoomIP(join_addr.get(), popup))
         connect_button.place(relx=0.5, rely=0.8, anchor=tk.CENTER)
 
+    # Takes a join key as input and sends it to tracker server to get server address back, connects to address
     def findRoomIP(self, join_key, popup=None):
         self.displayable_joinkey.set('Join Key: ' + join_key)
         self.tracker_server.sendto(join_key.encode('UTF-8'), client_server.TRACKER_ADDR)
@@ -117,6 +119,7 @@ class MusicParty(tk.Tk):
         self.showFrame(PartyScreen)
         self.serverListener_thread = threading.Thread(target=self.serverListener).start()
 
+    # Waits on server to send file information, then downloads the file
     def serverListener(self):
         while self.flags[SERVER_LISTENING]:
             song_header = self.join_server.recv(HEADER_SIZE)
@@ -127,6 +130,8 @@ class MusicParty(tk.Tk):
             song_file = open(file_name, 'wb')
             song_data = self.join_server.recv(HEADER_SIZE)
             download_progress = HEADER_SIZE
+
+            # Make sure all of the file is downloaded to the client
             while download_progress < file_size:
                 song_file.write(song_data)
                 song_data = self.join_server.recv(HEADER_SIZE)
