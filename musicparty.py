@@ -22,14 +22,18 @@ import client_server
 HEADER_SIZE = 4096
 SEPARATOR = '|'
 
+# Flags for threads
+PLAYLIST_ADDER = 'PLAYLIST_ADDER'
+SERVER_LISTENING = 'SERVER_LISTENING'
 
 class MusicParty(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
-        self.title('MusicParty')
-        self.resizable(False, False)
-        self.protocol('WM_DELETE_WINDOW', self.onClosing)
+        self.title('MusicParty')  # sets the title of the tkinter window
+        self.resizable(False, False)  #window can't be resized
+        self.protocol('WM_DELETE_WINDOW', self.onClosing)  # when the window is closed run our onClosing function
 
+        # server variables
         self.room_server = None
         self.join_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.join_addr = None
@@ -38,29 +42,38 @@ class MusicParty(tk.Tk):
         self.server_thread = None
         self.serverListener_thread = None
 
-        # list of mp3 filepaths
+        # Mp3 file related list variables
         self.playlist = []
+        self.added_songs = []
+
+        # sets thread flags
+        self.flags = {}
+        for flag in [PLAYLIST_ADDER, SERVER_LISTENING]:
+            self.flags[flag] = True
 
         container = tk.Frame(self)
         container.pack(side='top', fill='both', expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
+        # tkinter frame variables for working with parent class
         self.frame_list = [MainMenu, Help, PartyScreen]
         self.frames = {}
 
+        # set tkinter frame varibles
         for frame in self.frame_list:
             current_frame = frame(container, self)
             self.frames[frame] = current_frame
             current_frame.grid(row=0, column=0, sticky='nsew')
 
+        # bring main menu to the front
         self.showFrame(MainMenu)
 
         # create and run thread to automate playlist
         self.playlist_autoadd_thread = threading.Thread(target=self.playlist_auto_adder)
         self.playlist_autoadd_thread.start()
 
-
+    # function to bring requested frame to the front of the tkinter window
     def showFrame(self, requested_frame):
         """Takes in a frame class and raises it to the front of the GUI"""
         print('Frame: {}'.format(requested_frame))
@@ -106,7 +119,7 @@ class MusicParty(tk.Tk):
 
     def serverListener(self):
         print('Server listener started...')
-        while True:
+        while self.SERVER_LISTENING:
             song_header = self.join_server.recv(HEADER_SIZE)
 
             file_name, file_size = song_header.decode('utf-8').split(SEPARATOR)
@@ -139,24 +152,29 @@ class MusicParty(tk.Tk):
             self.join_server.send(chunk)
             chunk = song_data.read(HEADER_SIZE)
 
+    # automatically adds songs that are in current working directory into playlist - adds songs that are added
     def playlist_auto_adder(self):
         print('auto adder running...')
         song_found = False
         directory = os.fsencode(os.getcwd())
-        while True:
-            music_files = [f for f in glob.glob('*.mp3', recursive=True)]
-            for song in music_files:
+        while PLAYLIST_ADDER:  # uses flag to run while tkinter window is open
+            music_files = [f for f in glob.glob('*.mp3', recursive=True)]  # puts all mp3 files in current directory
+            for song in music_files:                                       # into a list (music_files)
                 if song not in filter(lambda song: os.path.basename(song), self.playlist):
+                    '''If song isn't already in the playlist for music party then add it to the playlist'''
                     print('Found: {}'.format(song))
-                    self.playlist.insert(0, song)
-                    self.frames[PartyScreen].playlist_list.insert(0, song)  # appends to the playlist_list widget
-            time.sleep(2)
+                    self.playlist.insert(0, song)       # append to the playlist
+                    if song not in self.added_songs:    # if song hasn't been added to the gui list then add it
+                        self.frames[PartyScreen].playlist_list.insert(0, song)  # appends to the playlist_list widget
+            time.sleep(2)   # run the adder every 2 seconds
 
     # Deals with making sure everything closes properly when closing the window
     def onClosing(self):
         try:
             self.destroy()
             self.server.shutdown()
+            self.flags[SERVER_LISTENING] = False    # break Server listener while loop
+            self.flags[PLAYLIST_ADDER] = False      # break playlist adder while loop
         except:
             sys.exit(0)
 
@@ -196,18 +214,19 @@ class Help(tk.Frame):
         text.insert(tk.INSERT,
                     '                                                     How To Use \'MusicParty\'                         \n'
                     '_______________________________________________________________________                                \n'
-                    '                                                                HOST                                   \n'
+                    '                                                                Hosting                                   \n'
                     '1. Press "Host Party" on the Main Menu                                             \n'
-                    '2. Give the displayed IP and port number                                          \n'
-                    '3. When all players have connected hit start, and type                            \n'
+                    '2. Give out the room # to anyone joining                                          \n'
                     '------------------------------------------------------------------------------------------------------\n'
-                    '                                                               PLAYER                                 \n'
+                    '                                                               Joining                                 \n'
                     '1. Press "Join Party" on the Main Menu                                             \n'
-                    '2. Get the IP number and port number from the Host                                \n'
-                    '      -type it in in format [IP #]:[port #]                                       \n'
-                    '3. Once the host starts the game, a sentence will popup with the text box below it\n'
-                    '4. Once done typing, HIT ENTER                                                    \n'
-                    '                                                                                  \n'
+                    '2. Get the Room # from the Host                                                    \n'
+                    '      -type it in popup and connect                                                \n'
+                    '3. Once done typing, HIT connect                                                   \n'
+                    '                                                                                   \n'
+                    '_______________________________________________________________________                                \n'
+                    '  ADDING MUSIC TO THE PLAYLIST WILL AUTOMATICALLY SEND IT TO EVERYONE IN THE PARTY \n'
+                    '                                                                                   \n'
                     '_______________________________________________________________________\n'
                     )
         text.configure(state='disable')
@@ -363,7 +382,8 @@ class PartyScreen(tk.Frame):
     def add_to_playlist(self, filename):
         filename = os.path.basename(filename)
         index = 0  # beginning of playlist
-        # self.playlist_list.insert(index, filename)  # appends to the playlist_list widget
+        self.playlist_list.insert(index, filename)  # appends to the playlist_list widget
+        self.controller.added_songs.insert(index, filename_path)  # appends to actual playlist list variable
         self.controller.playlist.insert(index, filename_path)  # appends to actual playlist list variable
         # self.index+=
         self.current_song = filename_path  # assign filename_path of selected song to current_song global variable

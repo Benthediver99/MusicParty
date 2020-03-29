@@ -14,11 +14,12 @@ ______________________________________________________________________
     2. Run these commands in command prompt:
 	a. pip install pygame
 	b. pip install mutagen.mp3
+	c. pip install glob
 	4. Run tracker_server.py
 	    - take IP and port # from terminal after it runs [IP]:[port #]
 	5. Manually edit client_server.py
 	    - On line 13 -> TRACKER_ADDR = ('192.168.4.53', 5557)
-	        -change the IP and Port # to the one you got in tracker_server.py
+	        -change the IP and Port # to the one you got from tracker_server.py
     5. command prompt: cd to folder where musicparty.py is located
     	-Run musicparty.py ([filepath] python musicparty.py)	
 
