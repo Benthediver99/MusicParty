@@ -12,6 +12,7 @@ import glob
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
+from tkinter import messagebox
 import threading
 import pygame
 from pygame import mixer
@@ -38,6 +39,8 @@ class MusicParty(tk.Tk):
         self.join_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.join_addr = None
         self.tracker_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        self.displayable_joinkey = tk.StringVar()
 
         self.server_thread = None
         self.serverListener_thread = None
@@ -101,6 +104,7 @@ class MusicParty(tk.Tk):
         connect_button.place(relx=0.5, rely=0.8, anchor=tk.CENTER)
 
     def findRoomIP(self, join_key, popup=None):
+        self.displayable_joinkey.set('Join Key: ' + join_key)
         self.tracker_server.sendto(join_key.encode('UTF-8'), client_server.TRACKER_ADDR)
         join_addr, tracker_addr = self.tracker_server.recvfrom(1024)
         self.join_addr = pickle.loads(join_addr)
@@ -150,10 +154,10 @@ class MusicParty(tk.Tk):
             for song in music_files:  # into a list (music_files)
                 if song not in filter(lambda file: os.path.basename(file), self.playlist):
                     '''If song isn't already in the playlist for music party then add it to the playlist'''
-                    self.playlist.insert(0, song)       # append to the playlist
-                    if song not in self.added_songs:    # if song hasn't been added to the gui list then add it
+                    self.playlist.insert(0, song)  # append to the playlist
+                    if song not in self.added_songs:  # if song hasn't been added to the gui list then add it
                         self.frames[PartyScreen].playlist_list.insert(0, song)  # appends to the playlist_list widget
-            time.sleep(2)   # run the adder every 2 seconds
+            time.sleep(2)  # run the adder every 2 seconds
 
     # Deals with making sure everything closes properly when closing the window
     def onClosing(self):
@@ -231,11 +235,9 @@ class PartyScreen(tk.Frame):
         mixer.init()
         pygame.init()
 
-        self.add_to_playlist_status_thread = threading.Thread(target=self.add_to_playlist_status,
-                                                              args=[self.current_song_playing])
+        self.add_to_playlist_status_thread = None
 
         self.MUSIC_ENDED = pygame.USEREVENT + 1
-        mixer.music.set_endevent(self.MUSIC_ENDED)
 
         self.current_song = 0
         self.stopped = False
@@ -247,6 +249,9 @@ class PartyScreen(tk.Frame):
         self.play_button = ttk.Button(self, text="Play",
                                       command=lambda: self.play_music())
         self.play_button.place(relx=0.73, rely=0.4, anchor=tk.CENTER)
+
+        self.joinkey_label = tk.Label(self, textvariable=self.controller.displayable_joinkey)
+        self.joinkey_label.place(relx=0.8, rely=0.05, anchor=tk.CENTER)
 
         # button - pulls up file directory for choosing mp3 file to be added to playlist - runs browse_file()
         self.browse_button = ttk.Button(self, text="+ Add Files +", command=lambda: self.browse_file())
@@ -341,7 +346,7 @@ class PartyScreen(tk.Frame):
                     mixer.music.load(song_to_play)
                     mixer.music.play()
                 except:
-                    tk.messagebox.showerror('Error playing song',
+                    messagebox.showerror('Error playing song',
                                          'No song given or not .mp3 file')  # pop-up box with error
         try:
             # self.update_timeslider()
@@ -378,8 +383,10 @@ class PartyScreen(tk.Frame):
         self.current_song = filename_path  # assign filename_path of selected song to current_song global variable
         self.get_time_elapsed()  # update the total_length timer display
         # self.update_timeslider()
-        self.statusbar['text'] = "Added to playlist - " + os.path.basename(filename_path)  # updates status bar when song is added
-        self.add_to_playlist_status_thread.start()
+        self.statusbar['text'] = "Added to playlist - " + os.path.basename(
+            filename_path)  # updates status bar when song is added
+        self.add_to_playlist_status_thread = threading.Thread(target=self.add_to_playlist_status,
+                                                              args=[self.current_song_playing]).start()
 
     # sets volume using inputted value (val) - comes from scale widget (volume_button)
     def set_vol(self, val):
@@ -424,7 +431,7 @@ class PartyScreen(tk.Frame):
     def song_selected_status(self, songname):
         if self.playing:
             self.song_selected_thread = threading.Thread(target=self.timeout_song_selected_status,
-                                                                  args=[self.current_song])
+                                                         args=[self.current_song])
             self.song_selected_thread.start()
         else:
             self.statusbar['text'] = "Song selected" + ' : ' + os.path.basename(songname)  # updates status bar
@@ -442,7 +449,8 @@ class PartyScreen(tk.Frame):
         except:
             self.statusbar['text'] = "Song selected" + ' : ' + os.path.basename(songname)  # updates status bar
             time.sleep(5)
-            self.statusbar['text'] = "Playing music - " + os.path.basename(self.current_song_playing)  # updates status bar
+            self.statusbar['text'] = "Playing music - " + os.path.basename(
+                self.current_song_playing)  # updates status bar
 
     #
     def show_details(self, play_song):

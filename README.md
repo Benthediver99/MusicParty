@@ -25,6 +25,9 @@ ______________________________________________________________________
 
 **How to host MusicParty:**
 
+    Just run musicparty.py and click the host button. When the music playlist screen opens
+    
+
 **How to Join MusicParty:**
 
 **Authors:**

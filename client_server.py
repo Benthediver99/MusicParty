@@ -11,7 +11,7 @@ import os
 
 HEADER_SIZE = 4096  # Chunk size of incoming data
 SEPARATOR = '|'  # Used to split sent data into its parts
-TRACKER_ADDR = ('127.0.0.1', 5557)  # IP of the tracker server, if running locally needs to be set to own ip
+TRACKER_ADDR = ('192.168.4.53', 5557)  # IP of the tracker server, if running locally needs to be set to own ip
 
 
 class Server:
