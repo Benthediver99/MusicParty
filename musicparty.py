@@ -231,6 +231,9 @@ class PartyScreen(tk.Frame):
         mixer.init()
         pygame.init()
 
+        self.add_to_playlist_status_thread = threading.Thread(target=self.add_to_playlist_status,
+                                                              args=[self.current_song_playing])
+
         self.MUSIC_ENDED = pygame.USEREVENT + 1
         mixer.music.set_endevent(self.MUSIC_ENDED)
 
@@ -376,7 +379,6 @@ class PartyScreen(tk.Frame):
         self.get_time_elapsed()  # update the total_length timer display
         # self.update_timeslider()
         self.statusbar['text'] = "Added to playlist - " + os.path.basename(filename_path)  # updates status bar when song is added
-        self.add_to_playlist_status_thread = threading.Thread(target=self.add_to_playlist_status, args= [self.current_song_playing])
         self.add_to_playlist_status_thread.start()
 
     # sets volume using inputted value (val) - comes from scale widget (volume_button)
